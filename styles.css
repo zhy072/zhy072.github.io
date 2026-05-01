@@ -85,12 +85,12 @@ img {
   min-height: min(730px, calc(100svh - 56px));
   display: grid;
   grid-template-columns: 280px 390px 370px;
-  grid-template-rows: 126px 128px 174px 64px 126px;
+  grid-template-rows: 126px 128px 292px 92px 120px;
   grid-template-areas:
     ". hero tools"
     "nav intro clock"
     "nav intro calendar"
-    "latest socials calendar"
+    "latest socials ."
     ". recommend music";
   gap: 30px 28px;
   align-items: center;
@@ -136,6 +136,8 @@ img {
 
 .nav-card {
   grid-area: nav;
+  grid-column: 1;
+  grid-row: 2 / 4;
   min-height: 430px;
   padding: 26px 28px;
 }
@@ -232,30 +234,84 @@ img {
 }
 
 .menu-item {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   height: 54px;
   display: flex;
   align-items: center;
   gap: 16px;
   padding: 0 22px;
   border-radius: 28px;
-  color: #839795;
+  color: #839795 !important;
   font-size: 17px;
   font-weight: 750;
   outline: none;
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: color 180ms ease, text-shadow 180ms ease, transform 180ms ease;
+  text-decoration: none !important;
+}
+
+.menu-item::before,
+.menu-item::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.menu-item::before {
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  background:
+    radial-gradient(circle at 18% 18%, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.42) 34%, rgba(255, 255, 255, 0.2) 72%),
+    linear-gradient(140deg, rgba(255, 255, 255, 0.78), rgba(202, 241, 229, 0.42) 56%, rgba(244, 199, 207, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 -18px 28px rgba(123, 197, 181, 0.14),
+    0 14px 36px rgba(61, 99, 92, 0.12);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  transform: scale(0.96);
+  z-index: 0;
+}
+
+.menu-item::after {
+  inset: 2px 7px auto;
+  height: 42%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0));
+  transform: translateY(-8px);
+  z-index: 0;
+}
+
+.menu-item > * {
+  position: relative;
+  z-index: 1;
+  color: inherit;
 }
 
 .menu-item:link,
 .menu-item:visited {
-  color: #839795;
+  color: #839795 !important;
 }
 
 .menu-item:hover,
-.menu-item:focus-visible {
-  color: #536866;
-  background: rgba(255, 255, 255, 0.74);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.86), 0 12px 34px rgba(89, 134, 126, 0.1);
-  transform: translateX(3px);
+.menu-item:focus-visible,
+.menu-item.is-hovered {
+  color: #415b58 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.82);
+  transform: translateX(4px) translateY(-1px);
+}
+
+.menu-item:hover::before,
+.menu-item:hover::after,
+.menu-item:focus-visible::before,
+.menu-item:focus-visible::after,
+.menu-item.is-hovered::before,
+.menu-item.is-hovered::after {
+  opacity: 1;
+  transform: none;
 }
 
 .icon {
@@ -361,6 +417,8 @@ img {
 
 .hero-card {
   grid-area: hero;
+  grid-column: 2;
+  grid-row: 1;
   height: 126px;
   padding: 12px;
   overflow: hidden;
@@ -410,17 +468,30 @@ img {
 
 .message-button {
   grid-area: tools;
+  grid-column: 3;
+  grid-row: 1;
   justify-self: start;
   align-self: end;
-  height: 48px;
-  min-width: 118px;
+  height: 52px;
+  min-width: 132px;
   gap: 12px;
   padding: 0 22px;
-  border-radius: 12px;
-  color: white;
-  font-weight: 800;
-  background: linear-gradient(180deg, #70d2ca, #43b7ae);
-  box-shadow: 0 15px 32px rgba(46, 159, 150, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
+  color: white !important;
+  font-size: 17px;
+  font-weight: 850;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0)),
+    linear-gradient(180deg, #78d6cf, #3fb3aa);
+  box-shadow:
+    0 18px 38px rgba(46, 159, 150, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -12px 20px rgba(27, 133, 125, 0.16);
+}
+
+.message-button:link,
+.message-button:visited {
+  color: white !important;
 }
 
 .message-icon {
@@ -455,7 +526,9 @@ img {
 
 .grid-button {
   grid-area: tools;
-  justify-self: center;
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
   align-self: end;
   width: 48px;
   height: 48px;
@@ -479,6 +552,8 @@ img {
 
 .clock-card {
   grid-area: clock;
+  grid-column: 3;
+  grid-row: 2;
   width: 260px;
   height: 128px;
   display: grid;
@@ -499,6 +574,8 @@ img {
 
 .intro-card {
   grid-area: intro;
+  grid-column: 2;
+  grid-row: 2 / 4;
   min-height: 312px;
   display: flex;
   flex-direction: column;
@@ -534,9 +611,11 @@ img {
 
 .calendar-card {
   grid-area: calendar;
-  min-height: 278px;
+  grid-column: 3;
+  grid-row: 3;
+  min-height: 292px;
   padding: 28px 30px;
-  align-self: start;
+  align-self: stretch;
 }
 
 .calendar-title {
@@ -576,6 +655,8 @@ img {
 
 .latest-card {
   grid-area: latest;
+  grid-column: 1;
+  grid-row: 4;
   min-height: 112px;
   padding: 24px 26px;
   align-self: end;
@@ -620,6 +701,8 @@ img {
 
 .social-row {
   grid-area: socials;
+  grid-column: 2;
+  grid-row: 4;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -687,63 +770,16 @@ img {
   background: rgba(255, 255, 255, 0.74);
 }
 
-.gmail-icon {
-  position: relative;
-  width: 28px;
-  height: 22px;
+.gmail-svg {
+  width: 31px;
+  height: 24px;
   display: block;
-  border-radius: 5px;
-  background:
-    linear-gradient(90deg, #4285f4 0 20%, transparent 20% 80%, #34a853 80% 100%),
-    linear-gradient(180deg, #ffffff 0 100%);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.72);
-}
-
-.gmail-icon::before,
-.gmail-icon::after,
-.gmail-icon span::before,
-.gmail-icon span::after {
-  position: absolute;
-  content: "";
-  height: 4px;
-  border-radius: 999px;
-  transform-origin: center;
-}
-
-.gmail-icon::before {
-  left: 2px;
-  top: 4px;
-  width: 15px;
-  background: #ea4335;
-  transform: rotate(38deg);
-}
-
-.gmail-icon::after {
-  right: 2px;
-  top: 4px;
-  width: 15px;
-  background: #ea4335;
-  transform: rotate(-38deg);
-}
-
-.gmail-icon span::before {
-  left: 4px;
-  bottom: 3px;
-  width: 10px;
-  background: #fbbc05;
-  transform: rotate(90deg);
-}
-
-.gmail-icon span::after {
-  right: 4px;
-  bottom: 3px;
-  width: 10px;
-  background: #34a853;
-  transform: rotate(90deg);
 }
 
 .recommend-card {
   grid-area: recommend;
+  grid-column: 2;
+  grid-row: 5;
   min-height: 170px;
   padding: 24px;
   align-self: start;
@@ -768,15 +804,17 @@ img {
 
 .music-card {
   grid-area: music;
+  grid-column: 3;
+  grid-row: 5;
   min-height: 74px;
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 16px 22px;
-  align-self: end;
+  align-self: start;
   border-radius: 20px;
   cursor: pointer;
-  margin-top: 12px;
+  margin-top: 0;
 }
 
 .note-mark {
@@ -989,6 +1027,21 @@ img {
 }
 
 @media (max-width: 1180px) {
+  .nav-card,
+  .hero-card,
+  .message-button,
+  .grid-button,
+  .clock-card,
+  .intro-card,
+  .calendar-card,
+  .latest-card,
+  .social-row,
+  .recommend-card,
+  .music-card {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
   .dashboard {
     width: min(760px, 100%);
     min-height: auto;

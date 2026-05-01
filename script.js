@@ -1,41 +1,41 @@
 const pad = (value) => String(value).padStart(2, "0");
 
-const weekNames = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+const weekNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const detailMap = {
-  home: ["主页导航", "这里可以拆成文章、项目、关于、推荐和博客友链等独立页面。"],
-  gallery: ["首页插画", "把 assets/image1.jpg 替换成你的插画、照片或个人形象图即可。"],
-  message: ["留言", "这里可以换成评论系统、表单服务，或继续使用邮件留言。"],
-  all: ["全部栏目", "这里可以放完整站点地图、归档和标签。"],
-  now: ["当前时间", "这个卡片来自首页实时钟表，也可以扩展成日程或时间线。"],
-  about: ["关于我", "这里适合放个人介绍、经历、技能栈和联系方式。"],
-  projects: ["我的项目", "这里适合放项目展示、论文、开源仓库和课程作品。"],
-  site: ["关于网站", "这里可以记录网站技术栈、更新日志和设计说明。"],
-  calendar: ["日历", "这里可以扩展成日程、学习记录或更新日志。"],
-  latest: ["最新文章", "这里可以改成文章列表，或连接到你的博客生成器。"],
-  recommend: ["随机推荐", "这里适合放课程笔记、书影音、工具和优秀文章。"],
-  links: ["优秀博客", "这里可以放朋友链接、技术博客和常看的网站。"],
-  music: ["音乐", "这里可以改成歌单、正在播放或喜欢的专辑。"],
-  likes: ["收藏", "这里可以放收藏夹、灵感库或常用链接。"],
+  home: ["Home Navigation", "This can become a full hub for posts, projects, about, links, and recommendations."],
+  gallery: ["Homepage Artwork", "Replace assets/image1.jpg with your own illustration, photo, or visual identity."],
+  message: ["Message", "This can become a comment system, a form service, or stay as an email-based message page."],
+  all: ["All Sections", "Use this page for a sitemap, archives, and tags."],
+  now: ["Current Time", "This card comes from the live clock and can expand into a timeline or daily log."],
+  about: ["About Me", "Use this page for your bio, experience, skills, and contact links."],
+  projects: ["Projects", "Use this page for projects, papers, open-source repos, and coursework."],
+  site: ["About This Site", "Use this page for the tech stack, changelog, and design notes."],
+  calendar: ["Calendar", "Use this page for schedules, learning logs, or update history."],
+  latest: ["Latest Post", "Turn this into a post list or connect it to your blog generator."],
+  recommend: ["Random Pick", "Use this page for notes, books, tools, courses, and favorite articles."],
+  links: ["Blogroll", "Use this page for friends, technical blogs, and sites you read often."],
+  music: ["Music", "Use this page for playlists, currently playing tracks, or favorite albums."],
+  likes: ["Likes", "Use this page for bookmarks, inspirations, and useful links."],
 };
 
 const greetingSlots = [
-  { end: 5, title: "凌晨好", copy: "夜色还在，慢慢来。" },
-  { end: 7, title: "清晨好", copy: "新的一天开始了。" },
-  { end: 11, title: "早上好", copy: "祝你今天开局顺利。" },
-  { end: 13, title: "中午好", copy: "记得好好吃饭。" },
-  { end: 17, title: "下午好", copy: "I'm Zhili, Nice to meet you!" },
-  { end: 19, title: "傍晚好", copy: "今天也辛苦了。" },
-  { end: 22, title: "晚上好", copy: "欢迎来这里坐坐。" },
-  { end: 24, title: "深夜好", copy: "别忘了早点休息。" },
+  { end: 5, title: "Past Midnight", copy: "The night is still here. Take it slow." },
+  { end: 7, title: "Early Morning", copy: "A quiet start to a new day." },
+  { end: 11, title: "Good Morning", copy: "Hope your day starts smoothly." },
+  { end: 13, title: "Good Noon", copy: "Remember to take a proper lunch break." },
+  { end: 17, title: "Good Afternoon", copy: "I'm Zhili, Nice to meet you!" },
+  { end: 19, title: "Good Evening", copy: "Thanks for stopping by after a long day." },
+  { end: 22, title: "Good Night", copy: "Welcome in. Stay as long as you like." },
+  { end: 24, title: "Late Night", copy: "Do not forget to get some rest." },
 ];
 
 const specialGreetings = [
-  { hour: 0, minute: 0, title: "零点好", copy: "新的日期开始了。" },
-  { hour: 3, minute: 14, title: "π 时刻", copy: "3.14 刚好路过。" },
-  { hour: 5, minute: 20, title: "520", copy: "今天也要对生活温柔一点。" },
-  { hour: 11, minute: 11, title: "11:11", copy: "许愿时间。" },
-  { hour: 12, minute: 34, title: "12:34", copy: "数字排队经过主页。" },
-  { hour: 23, minute: 59, title: "明天见", copy: "最后一分钟也算来过。" },
+  { hour: 0, minute: 0, title: "Midnight Reset", copy: "A new date just opened." },
+  { hour: 3, minute: 14, title: "Pi Minute", copy: "3.14 quietly passed through." },
+  { hour: 5, minute: 20, title: "5:20", copy: "A small reminder to be gentle with life." },
+  { hour: 11, minute: 11, title: "11:11", copy: "Make a tiny wish." },
+  { hour: 12, minute: 34, title: "12:34", copy: "The digits lined up for a second." },
+  { hour: 23, minute: 59, title: "See You Tomorrow", copy: "Even the last minute counts." },
 ];
 
 const audioTracks = [
@@ -65,7 +65,7 @@ function updateGreeting() {
   );
   const randomSpark =
     now.getMinutes() === 7 && greetingSeed < 0.32
-      ? { title: "第 7 分钟彩蛋", copy: "你刷新到了一条隐藏问候。" }
+      ? { title: "Minute Seven", copy: "You found a hidden greeting." }
       : null;
   const slot = greetingSlots.find((item) => now.getHours() < item.end);
   const greeting = special || randomSpark || slot || greetingSlots[greetingSlots.length - 1];
@@ -85,7 +85,7 @@ function renderCalendar() {
   const today = now.getDate();
   const first = new Date(year, month, 1);
   const days = new Date(year, month + 1, 0).getDate();
-  const labels = ["一", "二", "三", "四", "五", "六", "日"];
+  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const startOffset = (first.getDay() + 6) % 7;
 
   title.textContent = `${year}/${month + 1}/${today} ${weekNames[now.getDay()]}`;
@@ -124,6 +124,15 @@ function renderDetailPage() {
   document.title = `${nextTitle} | Zhili Yang`;
 }
 
+function initMenuHover() {
+  document.querySelectorAll(".menu-item").forEach((item) => {
+    item.addEventListener("pointerenter", () => item.classList.add("is-hovered"));
+    item.addEventListener("pointerleave", () => item.classList.remove("is-hovered"));
+    item.addEventListener("focus", () => item.classList.add("is-hovered"));
+    item.addEventListener("blur", () => item.classList.remove("is-hovered"));
+  });
+}
+
 function initMusicPlayer() {
   const audio = document.querySelector("#siteAudio");
   const card = document.querySelector("#musicCard");
@@ -150,7 +159,7 @@ function initMusicPlayer() {
 
   const setPlaying = (isPlaying) => {
     card.classList.toggle("is-playing", isPlaying);
-    toggle.setAttribute("aria-label", isPlaying ? "暂停" : "播放");
+    toggle.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
   };
 
   const play = () => {
@@ -162,7 +171,7 @@ function initMusicPlayer() {
       })
       .catch(() => {
         setPlaying(false);
-        title.textContent = audio.error ? "把歌曲放进 assets/music" : `${currentTrack.title} · 点击播放`;
+        title.textContent = audio.error ? "Add songs to assets/music" : `${currentTrack.title} · Click to play`;
       });
   };
 
@@ -198,7 +207,7 @@ function initMusicPlayer() {
   audio.addEventListener("error", () => {
     setPlaying(false);
     progress.style.width = "0%";
-    title.textContent = "把歌曲放进 assets/music";
+    title.textContent = "Add songs to assets/music";
   });
 
   setTrack(pickTrack());
@@ -218,16 +227,16 @@ function initMessageForm() {
     if (!message) return;
 
     const body = [
-      "来自个人网站的留言：",
+      "Message from the personal website:",
       "",
-      `名字：${name || "未填写"}`,
-      `联系方式：${contact || "未填写"}`,
+      `Name: ${name || "Not provided"}`,
+      `Contact: ${contact || "Not provided"}`,
       "",
       message,
     ].join("\n");
 
     window.location.href = `mailto:zhy072@ucsd.edu?subject=${encodeURIComponent(
-      "个人网站留言"
+      "Personal website message"
     )}&body=${encodeURIComponent(body)}`;
   });
 }
@@ -236,6 +245,7 @@ renderCalendar();
 renderDetailPage();
 updateClock();
 updateGreeting();
+initMenuHover();
 initMusicPlayer();
 initMessageForm();
 window.setInterval(updateClock, 1000);
