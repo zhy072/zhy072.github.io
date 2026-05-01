@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zhili Yang | Personal Website</title>
+    <meta
+      name="description"
+      content="Zhili Yang 的个人主页，收纳文章、项目、推荐和个人资料。"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="home-shell" aria-label="个人网站主页">
+      <section class="dashboard">
+        <a class="glass-card nav-card" href="detail.html?view=home" aria-label="打开主页导航">
+          <div class="identity">
+            <span class="avatar-chip media-slot" style="--media: url('assets/avatar.jpg')" aria-label="头像">
+              <span>ZY</span>
+            </span>
+            <div>
+              <p class="site-name">Zhili Yang</p>
+              <p class="status">建设中</p>
+            </div>
+          </div>
+
+          <p class="section-label">GENERAL</p>
+          <nav class="menu-list" aria-label="主要栏目">
+            <span class="menu-item is-active">
+              <span class="icon book-icon" aria-hidden="true"></span>
+              <span>近期文章</span>
+            </span>
+            <span class="menu-item">
+              <span class="icon grid-icon" aria-hidden="true"></span>
+              <span>我的项目</span>
+            </span>
+            <span class="menu-item">
+              <span class="icon face-icon" aria-hidden="true"></span>
+              <span>关于网站</span>
+            </span>
+            <span class="menu-item">
+              <span class="icon star-icon" aria-hidden="true"></span>
+              <span>推荐分享</span>
+            </span>
+            <span class="menu-item">
+              <span class="icon globe-icon" aria-hidden="true"></span>
+              <span>优秀博客</span>
+            </span>
+          </nav>
+        </a>
+
+        <a class="glass-card hero-card image-card" href="detail.html?view=gallery" aria-label="打开首页插画">
+          <span class="media-slot hero-media" style="--media: url('assets/image1.jpg')">
+            <span>image1.jpg</span>
+          </span>
+        </a>
+
+        <a class="write-button" href="detail.html?view=write" aria-label="写文章">
+          <span class="icon pen-icon" aria-hidden="true"></span>
+          <span>写文章</span>
+        </a>
+
+        <a class="grid-button" href="detail.html?view=all" aria-label="打开全部栏目">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span></span>
+        </a>
+
+        <a class="glass-card clock-card" href="detail.html?view=now" aria-label="查看当前时间">
+          <time id="clockTime">14:39</time>
+        </a>
+
+        <a class="glass-card intro-card" href="detail.html?view=about" aria-label="打开关于我">
+          <span class="portrait media-slot" style="--media: url('assets/avatar.jpg')" aria-label="个人头像">
+            <span>avatar.jpg</span>
+          </span>
+          <h1>Good Afternoon</h1>
+          <p>I'm Zhili, Nice to meet you!</p>
+        </a>
+
+        <a class="glass-card calendar-card" href="detail.html?view=calendar" aria-label="打开日历">
+          <p class="calendar-title" id="calendarTitle">2026/5/1 周五</p>
+          <div class="calendar-grid" id="calendarGrid" aria-hidden="true">
+            <span class="weekday">一</span>
+            <span class="weekday">二</span>
+            <span class="weekday">三</span>
+            <span class="weekday">四</span>
+            <span class="weekday">五</span>
+            <span class="weekday">六</span>
+            <span class="weekday">日</span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span class="today">1</span>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>6</span>
+            <span>7</span>
+            <span>8</span>
+            <span>9</span>
+            <span>10</span>
+            <span>11</span>
+            <span>12</span>
+            <span>13</span>
+            <span>14</span>
+            <span>15</span>
+            <span>16</span>
+            <span>17</span>
+            <span>18</span>
+            <span>19</span>
+            <span>20</span>
+            <span>21</span>
+            <span>22</span>
+            <span>23</span>
+            <span>24</span>
+            <span>25</span>
+            <span>26</span>
+            <span>27</span>
+            <span>28</span>
+            <span>29</span>
+            <span>30</span>
+            <span>31</span>
+          </div>
+        </a>
+
+        <a class="glass-card latest-card" href="detail.html?view=latest" aria-label="打开最新文章">
+          <p class="muted-title">最新文章</p>
+          <div class="latest-row">
+            <span class="thumb image-card media-slot" style="--media: url('assets/image2.jpg')" aria-label="最新文章封面">
+              <span>image2.jpg</span>
+            </span>
+            <div>
+              <h2>公告</h2>
+              <p>该用户正在搭建中</p>
+              <time datetime="2026-05-01">2026/5/1</time>
+            </div>
+          </div>
+        </a>
+
+        <div class="social-row" aria-label="社交链接">
+          <a class="social-button github" href="https://github.com/yourname" target="_blank" rel="noreferrer">
+            <span class="icon github-icon" aria-hidden="true"></span>
+            <span>Github</span>
+          </a>
+          <a class="social-button bilibili" href="https://space.bilibili.com/yourid" target="_blank" rel="noreferrer">
+            <span>bilibili</span>
+          </a>
+          <a class="social-button mail" href="mailto:hello@example.com" aria-label="发送邮件">
+            <span class="icon mail-icon" aria-hidden="true"></span>
+          </a>
+        </div>
+
+        <a class="glass-card recommend-card" href="detail.html?view=recommend" aria-label="打开随机推荐">
+          <p class="muted-title">随机推荐</p>
+          <div class="recommend-content">
+            <span class="book-cover image-card media-slot" style="--media: url('assets/image3.jpg')" aria-label="推荐封面">
+              <span>image3.jpg</span>
+            </span>
+            <div>
+              <h2>CMU 15-445 & 数据库</h2>
+              <p>一些 lab、架构、文档笔记、踩坑...</p>
+              <p class="stats">Views: 18,367&nbsp;&nbsp; Marks: 320</p>
+            </div>
+          </div>
+        </a>
+
+        <a class="glass-card music-card" href="detail.html?view=music" aria-label="打开音乐播放器">
+          <span class="note-mark" aria-hidden="true">♪</span>
+          <div class="track">
+            <p>Close To You</p>
+            <span class="progress"><span></span></span>
+          </div>
+          <span class="play-button" aria-hidden="true"></span>
+        </a>
+
+        <a class="like-bubble" href="detail.html?view=likes" aria-label="打开收藏">
+          <span>11424</span>
+          <strong>♥</strong>
+        </a>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
