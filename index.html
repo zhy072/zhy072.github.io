@@ -13,8 +13,8 @@
   <body>
     <main class="home-shell" aria-label="个人网站主页">
       <section class="dashboard">
-        <a class="glass-card nav-card" href="detail.html?view=home" aria-label="打开主页导航">
-          <div class="identity">
+        <aside class="glass-card nav-card" aria-label="主页导航">
+          <a class="identity" href="detail.html?view=home" aria-label="打开主页导航">
             <span class="avatar-chip media-slot" style="--media: url('assets/avatar.jpg')" aria-label="头像">
               <span>ZY</span>
             </span>
@@ -22,32 +22,32 @@
               <p class="site-name">Zhili Yang</p>
               <p class="status">建设中</p>
             </div>
-          </div>
+          </a>
 
           <p class="section-label">GENERAL</p>
           <nav class="menu-list" aria-label="主要栏目">
-            <span class="menu-item is-active">
+            <a class="menu-item" href="detail.html?view=latest">
               <span class="icon book-icon" aria-hidden="true"></span>
               <span>近期文章</span>
-            </span>
-            <span class="menu-item">
+            </a>
+            <a class="menu-item" href="detail.html?view=projects">
               <span class="icon grid-icon" aria-hidden="true"></span>
               <span>我的项目</span>
-            </span>
-            <span class="menu-item">
+            </a>
+            <a class="menu-item" href="detail.html?view=site">
               <span class="icon face-icon" aria-hidden="true"></span>
               <span>关于网站</span>
-            </span>
-            <span class="menu-item">
+            </a>
+            <a class="menu-item" href="detail.html?view=recommend">
               <span class="icon star-icon" aria-hidden="true"></span>
               <span>推荐分享</span>
-            </span>
-            <span class="menu-item">
+            </a>
+            <a class="menu-item" href="detail.html?view=links">
               <span class="icon globe-icon" aria-hidden="true"></span>
               <span>优秀博客</span>
-            </span>
+            </a>
           </nav>
-        </a>
+        </aside>
 
         <a class="glass-card hero-card image-card" href="detail.html?view=gallery" aria-label="打开首页插画">
           <span class="media-slot hero-media" style="--media: url('assets/image1.jpg')">
@@ -55,9 +55,9 @@
           </span>
         </a>
 
-        <a class="write-button" href="detail.html?view=write" aria-label="写文章">
-          <span class="icon pen-icon" aria-hidden="true"></span>
-          <span>写文章</span>
+        <a class="message-button" href="message.html" aria-label="留言">
+          <span class="icon message-icon" aria-hidden="true"></span>
+          <span>留言</span>
         </a>
 
         <a class="grid-button" href="detail.html?view=all" aria-label="打开全部栏目">
@@ -75,8 +75,8 @@
           <span class="portrait media-slot" style="--media: url('assets/avatar.jpg')" aria-label="个人头像">
             <span>avatar.jpg</span>
           </span>
-          <h1>Good Afternoon</h1>
-          <p>I'm Zhili, Nice to meet you!</p>
+          <h1 id="greetingTitle">下午好</h1>
+          <p id="greetingCopy">I'm Zhili, Nice to meet you!</p>
         </a>
 
         <a class="glass-card calendar-card" href="detail.html?view=calendar" aria-label="打开日历">
@@ -149,8 +149,10 @@
           <a class="social-button bilibili" href="https://space.bilibili.com/yourid" target="_blank" rel="noreferrer">
             <span>bilibili</span>
           </a>
-          <a class="social-button mail" href="mailto:hello@example.com" aria-label="发送邮件">
-            <span class="icon mail-icon" aria-hidden="true"></span>
+          <a class="social-button mail" href="mailto:zhy072@ucsd.edu" aria-label="用 Gmail 给我发邮件">
+            <span class="gmail-icon" aria-hidden="true">
+              <span></span>
+            </span>
           </a>
         </div>
 
@@ -168,14 +170,15 @@
           </div>
         </a>
 
-        <a class="glass-card music-card" href="detail.html?view=music" aria-label="打开音乐播放器">
+        <div class="glass-card music-card" id="musicCard" aria-label="音乐播放器">
           <span class="note-mark" aria-hidden="true">♪</span>
           <div class="track">
-            <p>Close To You</p>
-            <span class="progress"><span></span></span>
+            <p id="trackTitle">随机播放中</p>
+            <span class="progress"><span id="musicProgress"></span></span>
           </div>
-          <span class="play-button" aria-hidden="true"></span>
-        </a>
+          <button class="play-button" id="playToggle" type="button" aria-label="播放或暂停"></button>
+          <audio id="siteAudio" preload="auto"></audio>
+        </div>
 
         <a class="like-bubble" href="detail.html?view=likes" aria-label="打开收藏">
           <span>11424</span>

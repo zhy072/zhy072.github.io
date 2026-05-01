@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>留言 | Zhili Yang</title>
+    <meta name="description" content="给 Zhili Yang 留言。" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="detail-shell">
+      <section class="glass-card detail-card message-page">
+        <a class="back-link" href="index.html" aria-label="返回首页">← 首页</a>
+        <p class="section-label">MESSAGE</p>
+        <h1>留言</h1>
+        <form class="message-form" id="messageForm">
+          <label>
+            <span>名字</span>
+            <input id="messageName" name="name" type="text" autocomplete="name" />
+          </label>
+          <label>
+            <span>联系方式</span>
+            <input id="messageContact" name="contact" type="text" autocomplete="email" />
+          </label>
+          <label>
+            <span>留言</span>
+            <textarea id="messageBody" name="message" rows="6" required></textarea>
+          </label>
+          <button class="form-button" type="submit">发送到邮箱</button>
+        </form>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
