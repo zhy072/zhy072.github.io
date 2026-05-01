@@ -88,19 +88,19 @@ img {
 }
 
 .dashboard {
-  width: min(998px, 100%);
-  height: min(594px, calc(100svh - 28px));
+  width: min(1120px, calc(100vw - 64px));
+  height: min(700px, calc(100svh - 40px));
   min-height: 0;
   display: grid;
-  grid-template-columns: 260px 360px 340px;
-  grid-template-rows: 96px 100px 150px 54px 104px;
+  grid-template-columns: 280px 390px 370px;
+  grid-template-rows: 112px 118px 172px 62px 130px;
   grid-template-areas:
     ". hero tools"
     "nav intro clock"
     "nav intro calendar"
     "nav socials calendar"
     "latest recommend music";
-  gap: 18px;
+  gap: 22px;
   align-items: center;
   justify-content: center;
 }
@@ -147,8 +147,7 @@ img {
 .glass-card:hover,
 .message-button:hover,
 .grid-button:hover,
-.social-button:hover,
-.like-bubble:hover {
+.social-button:hover {
   transform: translateY(-4px);
   border-color: rgba(255, 255, 255, 0.96);
   box-shadow: 0 30px 86px rgba(62, 96, 89, 0.18), var(--inner);
@@ -160,7 +159,7 @@ img {
   grid-row: 2 / 5;
   min-height: 0;
   height: 100%;
-  padding: 18px 24px;
+  padding: 22px 26px;
   overflow: hidden;
 }
 
@@ -168,7 +167,7 @@ img {
   display: flex;
   align-items: center;
   gap: 13px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
   border-radius: 20px;
   outline: none;
 }
@@ -229,7 +228,7 @@ img {
 
 .site-name {
   margin: 0;
-  font-size: 19px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: 0;
 }
@@ -245,28 +244,28 @@ img {
 .muted-title {
   margin: 0;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
 }
 
 .menu-list {
   display: grid;
-  gap: 4px;
+  gap: 7px;
 }
 
 .menu-item {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  height: 38px;
+  height: 44px;
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 0 18px;
   border-radius: 28px;
   color: #839795 !important;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 750;
   outline: none;
   transition: color 180ms ease, text-shadow 180ms ease, transform 180ms ease;
@@ -441,7 +440,7 @@ img {
   grid-area: hero;
   grid-column: 2;
   grid-row: 1;
-  height: 96px;
+  height: 112px;
   padding: 10px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.72);
@@ -476,8 +475,7 @@ img {
 
 .message-button,
 .grid-button,
-.social-button,
-.like-bubble {
+.social-button {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -577,8 +575,8 @@ img {
   grid-area: clock;
   grid-column: 3;
   grid-row: 2;
-  width: 242px;
-  height: 100px;
+  width: 258px;
+  height: 118px;
   display: grid;
   place-items: center;
   justify-self: start;
@@ -589,7 +587,7 @@ img {
 .clock-card time {
   color: #405251;
   font-family: "SFMono-Regular", "Roboto Mono", ui-monospace, monospace;
-  font-size: 52px;
+  font-size: 58px;
   font-weight: 300;
   letter-spacing: 0;
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.9);
@@ -605,21 +603,21 @@ img {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 30px;
   text-align: center;
 }
 
 .portrait {
-  width: 108px;
-  height: 108px;
-  margin-bottom: 16px;
+  width: 124px;
+  height: 124px;
+  margin-bottom: 20px;
   border-radius: 50%;
   box-shadow: 0 18px 44px rgba(96, 149, 138, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .intro-card h1 {
   margin: 0 0 8px;
-  font-size: 24px;
+  font-size: 26px;
   line-height: 1.2;
   letter-spacing: 0;
 }
@@ -628,7 +626,7 @@ img {
   width: min(260px, 100%);
   margin: 0;
   color: #435554;
-  font-size: 19px;
+  font-size: 21px;
   font-weight: 800;
   line-height: 1.45;
 }
@@ -639,30 +637,30 @@ img {
   grid-row: 3 / 5;
   min-height: 0;
   height: 100%;
-  padding: 17px 24px;
+  padding: 22px 28px;
   align-self: stretch;
 }
 
 .calendar-title {
-  margin: 0 0 9px;
+  margin: 0 0 12px;
   color: #7f938f;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 5px 8px;
+  gap: 7px 11px;
   text-align: center;
   color: #94a3a0;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 750;
 }
 
 .calendar-grid span {
   min-width: 0;
-  height: 19px;
+  height: 21px;
   display: grid;
   place-items: center;
   border-radius: 8px;
@@ -684,27 +682,27 @@ img {
   grid-row: 5;
   min-height: 0;
   height: 100%;
-  padding: 17px 22px;
+  padding: 22px 24px;
   align-self: end;
 }
 
 .latest-row {
   display: flex;
   align-items: center;
-  gap: 13px;
-  margin-top: 8px;
+  gap: 15px;
+  margin-top: 10px;
 }
 
 .thumb {
-  width: 48px;
-  height: 48px;
+  width: 54px;
+  height: 54px;
   border-radius: 14px;
 }
 
 .latest-card h2,
 .recommend-card h2 {
   margin: 0;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.25;
   letter-spacing: 0;
 }
@@ -713,15 +711,15 @@ img {
 .recommend-card p:not(.muted-title) {
   margin: 4px 0 0;
   color: #7e918d;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
 }
 
 .latest-card time {
   display: block;
-  margin-top: 5px;
+  margin-top: 7px;
   color: #7f9893;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
 }
 
@@ -736,7 +734,7 @@ img {
 
 .social-button {
   min-width: 72px;
-  height: 44px;
+  height: 48px;
   padding: 0 18px;
   border-radius: 12px;
   gap: 10px;
@@ -790,8 +788,8 @@ img {
 }
 
 .social-button.mail {
-  width: 48px;
-  min-width: 48px;
+  width: 52px;
+  min-width: 52px;
   padding: 0;
   background: rgba(255, 255, 255, 0.74);
 }
@@ -808,19 +806,19 @@ img {
   grid-row: 5;
   min-height: 0;
   height: 100%;
-  padding: 18px 22px;
+  padding: 22px 24px;
   align-self: start;
 }
 
 .recommend-content {
   display: flex;
-  gap: 12px;
-  margin-top: 9px;
+  gap: 14px;
+  margin-top: 11px;
 }
 
 .book-cover {
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   border-radius: 8px;
 }
 
@@ -834,11 +832,11 @@ img {
   grid-column: 3;
   grid-row: 5;
   min-height: 0;
-  height: 74px;
+  height: 78px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 14px 18px;
+  gap: 16px;
+  padding: 16px 20px;
   align-self: start;
   border-radius: 20px;
   cursor: pointer;
@@ -932,38 +930,6 @@ img {
 
 .music-card audio {
   display: none;
-}
-
-.like-bubble {
-  grid-column: 3;
-  grid-row: 5;
-  justify-self: start;
-  align-self: end;
-  width: 62px;
-  height: 62px;
-  margin-left: 6px;
-  margin-bottom: -26px;
-  border-radius: 50%;
-  color: #f2aab5;
-  background: rgba(255, 255, 255, 0.64);
-  box-shadow: 0 18px 34px rgba(112, 153, 145, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-.like-bubble span {
-  position: absolute;
-  top: -13px;
-  left: 27px;
-  padding: 3px 8px;
-  border-radius: 10px;
-  color: white;
-  font-size: 11px;
-  font-weight: 900;
-  background: rgba(184, 200, 199, 0.72);
-}
-
-.like-bubble strong {
-  font-size: 29px;
-  line-height: 1;
 }
 
 .detail-shell {
@@ -1102,12 +1068,6 @@ img {
     width: 100%;
   }
 
-  .like-bubble {
-    grid-column: 2;
-    grid-row: auto;
-    align-self: center;
-    margin: 0 0 0 18px;
-  }
 }
 
 @media (max-width: 760px) {
@@ -1195,9 +1155,6 @@ img {
     flex: 1 1 150px;
   }
 
-  .like-bubble {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

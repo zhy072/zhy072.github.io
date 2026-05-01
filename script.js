@@ -15,7 +15,6 @@ const detailMap = {
   recommend: ["Random Pick", "Use this page for notes, books, tools, courses, and favorite articles."],
   links: ["Blogroll", "Use this page for friends, technical blogs, and sites you read often."],
   music: ["Music", "Use this page for playlists, currently playing tracks, or favorite albums."],
-  likes: ["Likes", "Use this page for bookmarks, inspirations, and useful links."],
 };
 
 const greetingSlots = [
