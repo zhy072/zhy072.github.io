@@ -81,18 +81,18 @@ img {
 }
 
 .dashboard {
-  width: min(1110px, 100%);
+  width: min(1088px, 100%);
   min-height: min(730px, calc(100svh - 56px));
   display: grid;
   grid-template-columns: 280px 390px 370px;
-  grid-template-rows: 126px 128px 174px 64px 126px;
+  grid-template-rows: 118px 120px 180px 64px 142px;
   grid-template-areas:
     ". hero tools"
     "nav intro clock"
     "nav intro calendar"
-    "latest socials calendar"
-    ". recommend music";
-  gap: 30px 28px;
+    "nav socials calendar"
+    "latest recommend music";
+  gap: 24px;
   align-items: center;
   justify-content: center;
 }
@@ -137,16 +137,16 @@ img {
 .nav-card {
   grid-area: nav;
   grid-column: 1;
-  grid-row: 2 / 4;
-  min-height: 430px;
-  padding: 26px 28px;
+  grid-row: 2 / 5;
+  min-height: 390px;
+  padding: 24px 28px;
 }
 
 .identity {
   display: flex;
   align-items: center;
   gap: 13px;
-  margin-bottom: 26px;
+  margin-bottom: 22px;
   border-radius: 20px;
   outline: none;
 }
@@ -230,14 +230,14 @@ img {
 
 .menu-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
 }
 
 .menu-item {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  height: 54px;
+  height: 48px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -419,7 +419,7 @@ img {
   grid-area: hero;
   grid-column: 2;
   grid-row: 1;
-  height: 126px;
+  height: 118px;
   padding: 12px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.72);
@@ -555,7 +555,7 @@ img {
   grid-column: 3;
   grid-row: 2;
   width: 260px;
-  height: 128px;
+  height: 120px;
   display: grid;
   place-items: center;
   justify-self: start;
@@ -576,7 +576,7 @@ img {
   grid-area: intro;
   grid-column: 2;
   grid-row: 2 / 4;
-  min-height: 312px;
+  min-height: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -586,9 +586,9 @@ img {
 }
 
 .portrait {
-  width: 132px;
-  height: 132px;
-  margin-bottom: 22px;
+  width: 124px;
+  height: 124px;
+  margin-bottom: 20px;
   border-radius: 50%;
   box-shadow: 0 18px 44px rgba(96, 149, 138, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
@@ -615,12 +615,12 @@ img {
   grid-row: 3 / 5;
   min-height: 0;
   height: 100%;
-  padding: 22px 30px;
+  padding: 20px 28px;
   align-self: stretch;
 }
 
 .calendar-title {
-  margin: 0 0 14px;
+  margin: 0 0 12px;
   color: #7f938f;
   font-size: 15px;
   font-weight: 800;
@@ -629,7 +629,7 @@ img {
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 9px 13px;
+  gap: 7px 12px;
   text-align: center;
   color: #94a3a0;
   font-size: 16px;
@@ -638,7 +638,7 @@ img {
 
 .calendar-grid span {
   min-width: 0;
-  height: 24px;
+  height: 21px;
   display: grid;
   place-items: center;
   border-radius: 8px;
@@ -657,7 +657,7 @@ img {
 .latest-card {
   grid-area: latest;
   grid-column: 1;
-  grid-row: 4;
+  grid-row: 5;
   min-height: 112px;
   padding: 24px 26px;
   align-self: end;
@@ -781,8 +781,8 @@ img {
   grid-area: recommend;
   grid-column: 2;
   grid-row: 5;
-  min-height: 150px;
-  padding: 24px;
+  min-height: 142px;
+  padding: 22px 24px;
   align-self: start;
 }
 
