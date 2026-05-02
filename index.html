@@ -15,12 +15,12 @@
       <section class="dashboard">
         <aside class="glass-card nav-card" aria-label="Homepage navigation">
           <a class="identity" href="detail.html?view=home" aria-label="Open homepage navigation">
-            <span class="avatar-chip media-slot" style="--media: url('assets/avatar.jpg')" aria-label="Avatar">
-              <span>ZY</span>
+            <span class="avatar-chip media-slot" aria-label="Avatar">
+              <img src="assets/avatar.jpg" alt="" />
             </span>
             <div>
               <p class="site-name">Zhili Yang</p>
-              <p class="status">Building</p>
+              <p class="status">Wechat ID: Kotobukimugi</p>
             </div>
           </a>
 
@@ -31,12 +31,8 @@
               <span>Recent Posts</span>
             </a>
             <a class="menu-item" href="detail.html?view=projects">
-              <span class="icon grid-icon" aria-hidden="true"></span>
+              <span class="icon project-icon" aria-hidden="true"></span>
               <span>Projects</span>
-            </a>
-            <a class="menu-item" href="detail.html?view=site">
-              <span class="icon face-icon" aria-hidden="true"></span>
-              <span>About Site</span>
             </a>
             <a class="menu-item" href="detail.html?view=recommend">
               <span class="icon star-icon" aria-hidden="true"></span>
@@ -46,12 +42,16 @@
               <span class="icon globe-icon" aria-hidden="true"></span>
               <span>Blogroll</span>
             </a>
+            <a class="menu-item" href="detail.html?view=site">
+              <span class="icon face-icon" aria-hidden="true"></span>
+              <span>About Site</span>
+            </a>
           </nav>
         </aside>
 
         <a class="glass-card hero-card image-card" href="detail.html?view=gallery" aria-label="Open homepage artwork">
-          <span class="media-slot hero-media" style="--media: url('assets/image1.jpg')">
-            <span>image1.jpg</span>
+          <span class="media-slot hero-media">
+            <img src="assets/image1.jpg" alt="" />
           </span>
         </a>
 
@@ -67,19 +67,19 @@
           <span></span>
         </a>
 
-        <a class="glass-card clock-card" href="detail.html?view=now" aria-label="View current time">
+        <div class="glass-card clock-card" aria-label="Current time">
           <time id="clockTime">14:39</time>
-        </a>
+        </div>
 
-        <a class="glass-card intro-card" href="detail.html?view=about" aria-label="Open about me">
-          <span class="portrait media-slot" style="--media: url('assets/avatar.jpg')" aria-label="Portrait">
-            <span>avatar.jpg</span>
+        <div class="glass-card intro-card" aria-label="Greeting">
+          <span class="portrait media-slot" aria-label="Portrait">
+            <img src="assets/avatar.jpg" alt="" />
           </span>
           <h1 id="greetingTitle">Good Afternoon</h1>
           <p id="greetingCopy">I'm Zhili, Nice to meet you!</p>
-        </a>
+        </div>
 
-        <a class="glass-card calendar-card" href="detail.html?view=calendar" aria-label="Open calendar">
+        <div class="glass-card calendar-card" aria-label="Calendar">
           <p class="calendar-title" id="calendarTitle">2026/5/1 Fri</p>
           <div class="calendar-grid" id="calendarGrid" aria-hidden="true">
             <span class="weekday">Mon</span>
@@ -125,14 +125,11 @@
             <span>30</span>
             <span>31</span>
           </div>
-        </a>
+        </div>
 
         <a class="glass-card latest-card" href="detail.html?view=latest" aria-label="Open latest post">
           <p class="muted-title">Latest Post</p>
           <div class="latest-row">
-            <span class="thumb image-card media-slot" style="--media: url('assets/image2.jpg')" aria-label="Latest post cover">
-              <span>image2.jpg</span>
-            </span>
             <div>
               <h2>Notice</h2>
               <p>This site is still being built.</p>
@@ -169,9 +166,6 @@
         <a class="glass-card recommend-card" href="detail.html?view=recommend" aria-label="Open random recommendation">
           <p class="muted-title">Random Pick</p>
           <div class="recommend-content">
-            <span class="book-cover image-card media-slot" style="--media: url('assets/image3.jpg')" aria-label="Recommendation cover">
-              <span>image3.jpg</span>
-            </span>
             <div>
               <h2>CMU 15-445 & Database</h2>
               <p>Labs, architecture notes, docs, and gotchas...</p>
@@ -180,15 +174,13 @@
           </div>
         </a>
 
-        <div class="glass-card music-card" id="musicCard" aria-label="Music player">
-          <span class="note-mark" aria-hidden="true">♪</span>
-          <div class="track">
-            <p id="trackTitle">Loading track</p>
-            <span class="progress"><span id="musicProgress"></span></span>
+        <a class="glass-card quote-card" href="detail.html?view=quote" aria-label="Open daily note">
+          <span class="quote-mark" aria-hidden="true">“</span>
+          <div>
+            <p>Neither lured by praise nor cowed by slander; walk the path and keep myself upright.</p>
+            <span>Daily Note</span>
           </div>
-          <button class="play-button" id="playToggle" type="button" aria-label="Play or pause"></button>
-          <audio id="siteAudio" preload="auto"></audio>
-        </div>
+        </a>
       </section>
     </main>
 

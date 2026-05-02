@@ -14,7 +14,7 @@ const detailMap = {
   latest: ["Latest Post", "Turn this into a post list or connect it to your blog generator."],
   recommend: ["Random Pick", "Use this page for notes, books, tools, courses, and favorite articles."],
   links: ["Blogroll", "Use this page for friends, technical blogs, and sites you read often."],
-  music: ["Music", "Use this page for playlists, currently playing tracks, or favorite albums."],
+  quote: ["Daily Note", "A small quote card for thoughts, reminders, or a short personal motto."],
 };
 
 const greetingSlots = [
@@ -35,12 +35,6 @@ const specialGreetings = [
   { hour: 11, minute: 11, title: "11:11", copy: "Make a tiny wish." },
   { hour: 12, minute: 34, title: "12:34", copy: "The digits lined up for a second." },
   { hour: 23, minute: 59, title: "See You Tomorrow", copy: "Even the last minute counts." },
-];
-
-const audioTracks = [
-  { title: "Close To You", src: "assets/music/close-to-you.mp3" },
-  { title: "Song 1", src: "assets/music/song1.mp3" },
-  { title: "Song 2", src: "assets/music/song2.mp3" },
 ];
 
 const greetingSeed = Math.random();
@@ -116,8 +110,22 @@ function renderDetailPage() {
 
   const params = new URLSearchParams(window.location.search);
   const view = params.get("view") || "home";
+
+  if (view === "quote") {
+    title.textContent = "Daily Note";
+    copy.className = "quote-detail";
+    copy.innerHTML = `
+      <span class="quote-detail-mark">“</span>
+      <span class="quote-detail-original">不诱于誉，不恐于诽，率道而行，端然正己。</span>
+      <span class="quote-detail-source">---from DeepSeek-V4</span>
+    `;
+    document.title = "Daily Note | Zhili Yang";
+    return;
+  }
+
   const [nextTitle, nextCopy] = detailMap[view] || detailMap.home;
 
+  copy.className = "";
   title.textContent = nextTitle;
   copy.textContent = nextCopy;
   document.title = `${nextTitle} | Zhili Yang`;
@@ -130,87 +138,6 @@ function initMenuHover() {
     item.addEventListener("focus", () => item.classList.add("is-hovered"));
     item.addEventListener("blur", () => item.classList.remove("is-hovered"));
   });
-}
-
-function initMusicPlayer() {
-  const audio = document.querySelector("#siteAudio");
-  const card = document.querySelector("#musicCard");
-  const toggle = document.querySelector("#playToggle");
-  const title = document.querySelector("#trackTitle");
-  const progress = document.querySelector("#musicProgress");
-  if (!audio || !card || !toggle || !title || !progress) return;
-
-  let currentTrack = null;
-
-  const pickTrack = () => {
-    if (audioTracks.length === 1) return audioTracks[0];
-    const available = audioTracks.filter((track) => track.src !== currentTrack?.src);
-    return available[Math.floor(Math.random() * available.length)];
-  };
-
-  const setTrack = (track) => {
-    currentTrack = track;
-    audio.src = track.src;
-    audio.volume = 0.62;
-    title.textContent = track.title;
-    progress.style.width = "0%";
-  };
-
-  const setPlaying = (isPlaying) => {
-    card.classList.toggle("is-playing", isPlaying);
-    toggle.setAttribute("aria-label", isPlaying ? "Pause" : "Play");
-  };
-
-  const play = () => {
-    audio
-      .play()
-      .then(() => {
-        setPlaying(true);
-        title.textContent = currentTrack.title;
-      })
-      .catch(() => {
-        setPlaying(false);
-        title.textContent = audio.error ? "Add songs to assets/music" : `${currentTrack.title} · Click to play`;
-      });
-  };
-
-  const togglePlayback = () => {
-    if (audio.paused) {
-      play();
-    } else {
-      audio.pause();
-      setPlaying(false);
-    }
-  };
-
-  toggle.addEventListener("click", (event) => {
-    event.stopPropagation();
-    togglePlayback();
-  });
-
-  card.addEventListener("click", (event) => {
-    if (event.target.closest("button")) return;
-    togglePlayback();
-  });
-
-  audio.addEventListener("timeupdate", () => {
-    if (!audio.duration) return;
-    progress.style.width = `${Math.min((audio.currentTime / audio.duration) * 100, 100)}%`;
-  });
-
-  audio.addEventListener("ended", () => {
-    setTrack(pickTrack());
-    play();
-  });
-
-  audio.addEventListener("error", () => {
-    setPlaying(false);
-    progress.style.width = "0%";
-    title.textContent = "Add songs to assets/music";
-  });
-
-  setTrack(pickTrack());
-  play();
 }
 
 function initMessageForm() {
@@ -245,7 +172,6 @@ renderDetailPage();
 updateClock();
 updateGreeting();
 initMenuHover();
-initMusicPlayer();
 initMessageForm();
 window.setInterval(updateClock, 1000);
 window.setInterval(updateGreeting, 60 * 1000);
