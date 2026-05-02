@@ -1,7 +1,9 @@
 const pad = (value) => String(value).padStart(2, "0");
 
 const weekNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const content = window.siteContent || { projects: [], blogroll: [] };
+const content = { projects: [], blogroll: [] };
+const projectIndexPath = "projects/index.json";
+const blogrollPath = "blogroll.json";
 const commentsConfig = {
   repo: "zhy072/zhy072.github.io",
   issuePrefix: "post:",
@@ -105,8 +107,19 @@ function formatDateTime(value) {
   )}`;
 }
 
-function getPostHref(post) {
-  return `detail.html?view=post&id=${encodeURIComponent(post.id)}`;
+function getProjectAnchor(projectId) {
+  return `project-${String(projectId || "").replace(/[^A-Za-z0-9_-]/g, "-")}`;
+}
+
+function getPostHref(post, source = {}) {
+  const params = new URLSearchParams({ view: "post", id: post.id });
+  if (source.from) params.set("from", source.from);
+  if (source.projectId) params.set("project", source.projectId);
+  return `detail.html?${params.toString()}`;
+}
+
+function getProjectHref(projectId) {
+  return `detail.html?view=projects#${getProjectAnchor(projectId)}`;
 }
 
 function getRandomPost(posts) {
@@ -129,6 +142,109 @@ function createElement(tag, className, text) {
   if (className) element.className = className;
   if (text !== undefined) element.textContent = text;
   return element;
+}
+
+async function fetchJson(path, fallback) {
+  try {
+    const response = await fetch(path);
+    if (!response.ok) throw new Error(`Unable to load ${path}`);
+    return await response.json();
+  } catch {
+    return fallback;
+  }
+}
+
+async function fetchText(path) {
+  const response = await fetch(path);
+  if (!response.ok) throw new Error(`Unable to load ${path}`);
+  return response.text();
+}
+
+function parseFrontmatter(markdown) {
+  const match = markdown.match(/^---\s*\n([\s\S]*?)\n---\s*\n?([\s\S]*)$/);
+  if (!match) return { data: {}, body: markdown.trim() };
+
+  const data = {};
+  match[1].split("\n").forEach((line) => {
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) return;
+
+    const key = line.slice(0, separatorIndex).trim();
+    const rawValue = line.slice(separatorIndex + 1).trim();
+    data[key] = parseFrontmatterValue(rawValue);
+  });
+
+  return { data, body: match[2].trim() };
+}
+
+function parseFrontmatterValue(value) {
+  if (value === "true") return true;
+  if (value === "false") return false;
+
+  if (value.startsWith("[") && value.endsWith("]")) {
+    return value
+      .slice(1, -1)
+      .split(",")
+      .map((item) => stripQuotes(item.trim()))
+      .filter(Boolean);
+  }
+
+  return stripQuotes(value);
+}
+
+function stripQuotes(value) {
+  return value.replace(/^["']|["']$/g, "");
+}
+
+function getPostIdFromPath(path) {
+  const fileName = path.split("/").pop() || "";
+  return fileName.replace(/\.md$/i, "");
+}
+
+async function loadPost(project, postFile) {
+  const path = `projects/${project.id}/${postFile}`;
+  const markdown = await fetchText(path);
+  const parsed = parseFrontmatter(markdown);
+  const id = parsed.data.id || getPostIdFromPath(postFile);
+
+  return {
+    id,
+    path,
+    title: parsed.data.title || id,
+    excerpt: parsed.data.excerpt || "",
+    publishedAt: parsed.data.publishedAt || "",
+    star: isStarred(parsed.data),
+    tags: Array.isArray(parsed.data.tags) ? parsed.data.tags : [],
+    markdown: parsed.body,
+    projectId: project.id,
+    projectTitle: project.title,
+    projectSummary: project.summary,
+    starred: isStarred(parsed.data),
+  };
+}
+
+async function loadContent() {
+  const index = await fetchJson(projectIndexPath, { projects: [] });
+  const projects = Array.isArray(index.projects) ? index.projects : [];
+
+  const loadedProjects = await Promise.all(
+    projects.map(async (project) => {
+      const postFiles = Array.isArray(project.posts) ? project.posts : [];
+      const posts = await Promise.all(
+        postFiles.map((postFile) =>
+          loadPost(project, postFile).catch(() => null)
+        )
+      );
+
+      return {
+        ...project,
+        posts: posts.filter(Boolean),
+      };
+    })
+  );
+
+  content.projects = loadedProjects;
+  content.blogroll = await fetchJson(blogrollPath, []);
 }
 
 function getPostIssueTerm(post) {
@@ -217,7 +333,7 @@ function fillHomePostCard(prefix, post) {
   const date = document.querySelector(`#${prefix}PostDate`);
   if (!card || !title || !excerpt || !date || !post) return;
 
-  card.href = getPostHref(post);
+  card.href = getPostHref(post, { from: "home" });
   title.textContent = post.title || "Untitled";
   excerpt.textContent = post.excerpt || "";
   date.dateTime = post.publishedAt || "";
@@ -248,9 +364,9 @@ function renderEmpty(contentTarget, message) {
   contentTarget.appendChild(createElement("p", "empty-copy", message));
 }
 
-function createPostListItem(post) {
+function createPostListItem(post, source = {}) {
   const link = createElement("a", "post-list-item");
-  link.href = getPostHref(post);
+  link.href = getPostHref(post, source);
 
   const eyebrow = createElement("p", "post-eyebrow");
   eyebrow.textContent = `${post.projectTitle || "Project"} / ${formatDate(post.publishedAt)}`;
@@ -271,7 +387,7 @@ function createPostListItem(post) {
   return link;
 }
 
-function renderPostList(title, posts, emptyMessage) {
+function renderPostList(title, posts, emptyMessage, source = {}) {
   const contentTarget = resetDetail(title, { wide: true });
   if (!contentTarget) return;
 
@@ -281,7 +397,7 @@ function renderPostList(title, posts, emptyMessage) {
   }
 
   const list = createElement("div", "post-list");
-  posts.forEach((post) => list.appendChild(createPostListItem(post)));
+  posts.forEach((post) => list.appendChild(createPostListItem(post, source)));
   contentTarget.appendChild(list);
 }
 
@@ -298,6 +414,7 @@ function renderProjects() {
   const list = createElement("div", "project-list");
   projects.forEach((project) => {
     const section = createElement("section", "project-folder");
+    section.id = getProjectAnchor(project.id);
     const heading = createElement("div", "project-heading");
     heading.append(
       createElement("span", "folder-mark", "/"),
@@ -317,7 +434,9 @@ function renderProjects() {
         starred: isStarred(post),
       }))
       .sort((left, right) => getPostTimestamp(right) - getPostTimestamp(left))
-      .forEach((post) => nested.appendChild(createPostListItem(post)));
+      .forEach((post) =>
+        nested.appendChild(createPostListItem(post, { from: "projects", projectId: project.id }))
+      );
 
     if (!posts.length) nested.appendChild(createElement("p", "empty-copy", "No posts in this project yet."));
     section.appendChild(nested);
@@ -325,6 +444,7 @@ function renderProjects() {
   });
 
   contentTarget.appendChild(list);
+  scrollToHashTarget();
 }
 
 function renderBlogroll() {
@@ -369,6 +489,18 @@ function renderBlogroll() {
   contentTarget.appendChild(wrapper);
 }
 
+function scrollToHashTarget() {
+  const hash = window.location.hash;
+  if (!hash || !document.getElementById) return;
+
+  const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+  if (!target) return;
+
+  window.setTimeout(() => {
+    target.scrollIntoView({ block: "start" });
+  }, 0);
+}
+
 function renderOverview() {
   const contentTarget = resetDetail("All Sections", { wide: true });
   if (!contentTarget) return;
@@ -391,6 +523,266 @@ function renderOverview() {
   contentTarget.appendChild(list);
 }
 
+function renderMarkdown(markdown) {
+  const body = createElement("div", "post-body");
+  const lines = String(markdown || "").split("\n");
+  let paragraph = [];
+  let list = null;
+  let codeBlock = null;
+  let codeLanguage = "";
+
+  const flushParagraph = () => {
+    if (!paragraph.length) return;
+    body.appendChild(createElement("p", "", paragraph.join(" ").trim()));
+    paragraph = [];
+  };
+
+  const flushList = () => {
+    if (!list) return;
+    body.appendChild(list);
+    list = null;
+  };
+
+  const flushCodeBlock = () => {
+    if (!codeBlock) return;
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    const rawCode = codeBlock.join("\n");
+    const language = normalizeCodeLanguage(codeLanguage, rawCode);
+    const copyButton = createElement("button", "code-copy-button");
+    const copyIcon = createElement("span", "code-copy-icon");
+    copyIcon.append(createElement("span", "code-copy-back"), createElement("span", "code-copy-front"));
+
+    copyButton.type = "button";
+    copyButton.title = "Copy code";
+    copyButton.setAttribute("aria-label", "Copy code");
+    copyButton.appendChild(copyIcon);
+    copyButton.addEventListener("click", () => copyCodeToClipboard(rawCode, copyButton));
+
+    pre.className = "code-block";
+    if (language) pre.dataset.language = language;
+    code.className = language ? `language-${language}` : "";
+    code.innerHTML = highlightCode(rawCode, language);
+    pre.append(copyButton, code);
+    body.appendChild(pre);
+    codeBlock = null;
+    codeLanguage = "";
+  };
+
+  lines.forEach((line) => {
+    if (line.trim().startsWith("```")) {
+      if (codeBlock) {
+        flushCodeBlock();
+      } else {
+        flushParagraph();
+        flushList();
+        codeLanguage = line.trim().slice(3).trim().split(/\s+/)[0] || "";
+        codeBlock = [];
+      }
+      return;
+    }
+
+    if (codeBlock) {
+      codeBlock.push(line);
+      return;
+    }
+
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      return;
+    }
+
+    const headingMatch = trimmed.match(/^(#{2,4})\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      const level = Math.min(headingMatch[1].length, 4);
+      body.appendChild(createElement(`h${level}`, "", headingMatch[2]));
+      return;
+    }
+
+    const listMatch = trimmed.match(/^[-*]\s+(.+)$/);
+    if (listMatch) {
+      flushParagraph();
+      if (!list) list = document.createElement("ul");
+      list.appendChild(createElement("li", "", listMatch[1]));
+      return;
+    }
+
+    paragraph.push(trimmed);
+  });
+
+  flushParagraph();
+  flushList();
+  flushCodeBlock();
+
+  if (!body.children.length) {
+    body.appendChild(createElement("p", "", "No content yet."));
+  }
+
+  return body;
+}
+
+function normalizeCodeLanguage(language, code) {
+  const normalized = String(language || "").toLowerCase();
+  if (["py", "python"].includes(normalized)) return "python";
+  if (["js", "javascript", "jsx", "ts", "typescript", "tsx"].includes(normalized)) return "javascript";
+  if (["json"].includes(normalized)) return "json";
+  if (["css"].includes(normalized)) return "css";
+  if (["html", "xml", "svg"].includes(normalized)) return "html";
+
+  if (/^\s*(import|from|class|def)\s/m.test(code)) return "python";
+  if (/^\s*(const|let|var|function|import|export)\s/m.test(code)) return "javascript";
+  return normalized;
+}
+
+async function copyCodeToClipboard(code, button) {
+  try {
+    await navigator.clipboard.writeText(code);
+    setCopyButtonState(button, true);
+  } catch {
+    const copied = copyCodeWithFallback(code);
+    setCopyButtonState(button, copied);
+  }
+}
+
+function copyCodeWithFallback(code) {
+  const textarea = document.createElement("textarea");
+  textarea.value = code;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch {
+    copied = false;
+  }
+
+  textarea.remove();
+  return copied;
+}
+
+function setCopyButtonState(button, copied) {
+  button.classList.toggle("is-copied", copied);
+  button.classList.toggle("is-failed", !copied);
+  button.title = copied ? "Copied" : "Copy failed";
+  button.setAttribute("aria-label", copied ? "Copied" : "Copy failed");
+  window.setTimeout(() => {
+    button.classList.remove("is-copied", "is-failed");
+    button.title = "Copy code";
+    button.setAttribute("aria-label", "Copy code");
+  }, 1400);
+}
+
+function highlightCode(code, language) {
+  const grammar = getCodeGrammar(language);
+  if (!grammar) return escapeHtml(code);
+
+  const tokens = [];
+  let rest = code;
+
+  while (rest) {
+    let matched = false;
+    for (const rule of grammar) {
+      rule.regex.lastIndex = 0;
+      const match = rule.regex.exec(rest);
+      if (!match) continue;
+
+      tokens.push({
+        type: rule.type,
+        value: match[0],
+      });
+      rest = rest.slice(match[0].length);
+      matched = true;
+      break;
+    }
+
+    if (!matched) {
+      tokens.push({ type: "", value: rest[0] });
+      rest = rest.slice(1);
+    }
+  }
+
+  return tokens
+    .map((token) => {
+      const escaped = escapeHtml(token.value);
+      return token.type ? `<span class="tok-${token.type}">${escaped}</span>` : escaped;
+    })
+    .join("");
+}
+
+function getCodeGrammar(language) {
+  const common = {
+    string: /^(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/,
+    number: /^\b\d+(?:\.\d+)?\b/,
+  };
+
+  if (language === "python") {
+    return [
+      { type: "comment", regex: /^#[^\n]*/ },
+      { type: "string", regex: /^(?:"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/ },
+      { type: "keyword", regex: /^\b(?:and|as|assert|async|await|break|class|continue|def|del|elif|else|except|False|finally|for|from|if|import|in|is|lambda|None|nonlocal|not|or|pass|raise|return|True|try|while|with|yield)\b/ },
+      { type: "self", regex: /^\bself\b/ },
+      { type: "builtin", regex: /^\b(?:bool|dict|enumerate|float|int|len|list|map|max|min|print|range|set|str|sum|super|tuple|zip)\b/ },
+      { type: "type", regex: /^\b[A-Z]\w*(?=\s*(?:\(|:))/ },
+      { type: "function", regex: /^\b[A-Za-z_]\w*(?=\s*\()/ },
+      { type: "number", regex: common.number },
+    ];
+  }
+
+  if (language === "javascript") {
+    return [
+      { type: "comment", regex: /^(?:\/\/[^\n]*|\/\*[\s\S]*?\*\/)/ },
+      { type: "string", regex: /^(?:`(?:\\.|[^`\\])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/ },
+      { type: "keyword", regex: /^\b(?:async|await|break|case|catch|class|const|continue|default|else|export|extends|false|finally|for|from|function|if|import|in|let|new|null|return|switch|this|throw|true|try|typeof|undefined|var|while)\b/ },
+      { type: "function", regex: /^\b[A-Za-z_$][\w$]*(?=\s*\()/ },
+      { type: "number", regex: common.number },
+    ];
+  }
+
+  if (language === "json") {
+    return [
+      { type: "string", regex: /^"(?:\\.|[^"\\])*"(?=\s*:)/ },
+      { type: "value", regex: /^"(?:\\.|[^"\\])*"/ },
+      { type: "keyword", regex: /^\b(?:true|false|null)\b/ },
+      { type: "number", regex: /^-?\b\d+(?:\.\d+)?(?:e[+-]?\d+)?\b/i },
+    ];
+  }
+
+  if (language === "css") {
+    return [
+      { type: "comment", regex: /^\/\*[\s\S]*?\*\// },
+      { type: "string", regex: common.string },
+      { type: "keyword", regex: /^[@.#]?[A-Za-z_-][\w-]*(?=\s*[:{,])/ },
+      { type: "number", regex: /^\b\d+(?:\.\d+)?(?:px|rem|em|%|vh|vw|s|ms)?\b/ },
+    ];
+  }
+
+  if (language === "html") {
+    return [
+      { type: "comment", regex: /^<!--[\s\S]*?-->/ },
+      { type: "keyword", regex: /^<\/?[A-Za-z][\w:-]*/ },
+      { type: "string", regex: common.string },
+      { type: "function", regex: /^\b[A-Za-z_:][\w:.-]*(?==)/ },
+    ];
+  }
+
+  return null;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function renderPostDetail(post) {
   const contentTarget = resetDetail(post?.title || "Post Not Found", { wide: true });
   if (!contentTarget) return;
@@ -406,12 +798,7 @@ function renderPostDetail(post) {
 
   if (post.excerpt) contentTarget.appendChild(createElement("p", "post-detail-excerpt", post.excerpt));
 
-  const body = createElement("div", "post-body");
-  const paragraphs = Array.isArray(post.body) && post.body.length ? post.body : [post.excerpt || ""];
-  paragraphs.forEach((paragraph) => {
-    if (paragraph) body.appendChild(createElement("p", "", paragraph));
-  });
-  contentTarget.appendChild(body);
+  contentTarget.appendChild(renderMarkdown(post.markdown));
 
   if (Array.isArray(post.tags) && post.tags.length) {
     const tags = createElement("div", "tag-row");
@@ -437,7 +824,7 @@ function createMessageItem(message) {
 
   if (message.post) {
     const postLink = createElement("a", "", `Post / ${message.post.title}`);
-    postLink.href = getPostHref(message.post);
+    postLink.href = getPostHref(message.post, { from: "messages" });
     postLine.appendChild(postLink);
   } else {
     postLine.appendChild(createElement("span", "", "Post / Missing post"));
@@ -547,6 +934,26 @@ function renderStaticDetail(view) {
   contentTarget.appendChild(createElement("p", "", nextCopy));
 }
 
+function updateBackLink(params, view, post) {
+  const backLink = document.querySelector(".back-link");
+  if (!backLink) return;
+
+  const from = params.get("from");
+  const projectId = params.get("project") || post?.projectId;
+  const targets = {
+    latest: ["detail.html?view=latest", "← Recent Posts"],
+    recommend: ["detail.html?view=recommend", "← Recommendations"],
+    projects: [getProjectHref(projectId), "← Projects"],
+    messages: ["message.html", "← Messages"],
+    home: ["index.html", "← Home"],
+  };
+
+  const [href, label] = view === "post" && targets[from] ? targets[from] : targets.home;
+  backLink.href = href;
+  backLink.textContent = label;
+  backLink.setAttribute("aria-label", label.replace("← ", "Back to "));
+}
+
 function renderDetailPage() {
   const title = document.querySelector("#detailTitle");
   const contentTarget = document.querySelector("#detailContent");
@@ -554,6 +961,7 @@ function renderDetailPage() {
 
   const params = new URLSearchParams(window.location.search);
   const view = params.get("view") || "home";
+  updateBackLink(params, view);
 
   if (view === "quote") {
     renderQuoteDetail();
@@ -561,7 +969,7 @@ function renderDetailPage() {
   }
 
   if (view === "latest") {
-    renderPostList("Recent Posts", getPostsByDate(), "No posts yet.");
+    renderPostList("Recent Posts", getPostsByDate(), "No posts yet.", { from: "latest" });
     return;
   }
 
@@ -574,7 +982,8 @@ function renderDetailPage() {
     renderPostList(
       "Recommendations",
       getPostsByDate().filter((post) => post.starred),
-      "No starred posts yet."
+      "No starred posts yet.",
+      { from: "recommend" }
     );
     return;
   }
@@ -590,7 +999,9 @@ function renderDetailPage() {
   }
 
   if (view === "post") {
-    renderPostDetail(getPostById(params.get("id")));
+    const post = getPostById(params.get("id"));
+    updateBackLink(params, view, post);
+    renderPostDetail(post);
     return;
   }
 
@@ -606,12 +1017,18 @@ function initMenuHover() {
   });
 }
 
-renderCalendar();
-renderHomePosts();
-renderDetailPage();
-renderMessagePage();
-updateClock();
-updateGreeting();
-initMenuHover();
+async function initSite() {
+  renderCalendar();
+  updateClock();
+  updateGreeting();
+  initMenuHover();
+
+  await loadContent();
+  renderHomePosts();
+  renderDetailPage();
+  renderMessagePage();
+}
+
+initSite();
 window.setInterval(updateClock, 1000);
 window.setInterval(updateGreeting, 60 * 1000);

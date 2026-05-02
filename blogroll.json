@@ -1,0 +1,20 @@
+[
+  {
+    "title": "Maggie Appleton",
+    "url": "https://maggieappleton.com/",
+    "category": "Essays",
+    "description": "Visual essays about programming, knowledge tools, and interfaces."
+  },
+  {
+    "title": "Julia Evans",
+    "url": "https://jvns.ca/",
+    "category": "Systems",
+    "description": "Clear notes about debugging, networking, shells, and how computers work."
+  },
+  {
+    "title": "MIT 6.824",
+    "url": "https://pdos.csail.mit.edu/6.824/",
+    "category": "Courses",
+    "description": "Distributed systems course materials and papers."
+  }
+]

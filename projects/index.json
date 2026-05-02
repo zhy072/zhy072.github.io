@@ -1,0 +1,22 @@
+{
+  "projects": [
+    {
+      "id": "Attention",
+      "title": "Attention",
+      "summary": "Differnet Attention",
+      "posts": ["MultipleHeadAttention.md", "CrossAttention.md"]
+    },
+    {
+      "id": "site",
+      "title": "Site",
+      "summary": "Notes about this website, design decisions, and update logs.",
+      "posts": ["notice.md", "post-system.md"]
+    },
+    {
+      "id": "course-notes",
+      "title": "Course Notes",
+      "summary": "Coursework notes, lab writeups, and architecture references.",
+      "posts": ["cmu-15445-database.md", "linux-root-notes.md"]
+    }
+  ]
+}

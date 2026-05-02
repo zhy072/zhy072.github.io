@@ -5,8 +5,10 @@ personal webpage
 
 - Homepage structure and card links: `index.html`
 - Glass effects, background, card sizing, and responsive layout: `styles.css`
-- Editable projects, posts, recommendations, and blogroll data: `content.js`
-- Live clock, time-based greeting, post sorting, GitHub Issue comments, and detail rendering: `script.js`
+- Project index: `projects/index.json`
+- Markdown posts: `projects/<project-id>/<post-id>.md`
+- Blogroll links: `blogroll.json`
+- Live clock, time-based greeting, markdown loading, post sorting, GitHub Issue comments, and detail rendering: `script.js`
 - Shared placeholder destination page: `detail.html`
 - Message page: `message.html`
 
@@ -22,10 +24,11 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 ## Common Edits
 
 - Change the name: search for `Zhili Yang`
-- Add or edit posts: update `projects[].posts[]` in `content.js`
-- Change Recent Posts / Latest Post order: edit each post's `publishedAt`
-- Put a post into Recommendations: set `star: true`
-- Edit Blogroll links: update `blogroll[]` in `content.js`
+- Add a project: create `projects/<project-id>/`, then add it to `projects/index.json`
+- Add a post: create `projects/<project-id>/<post-id>.md`, then list the file in that project's `posts`
+- Change Recent Posts / Latest Post order: edit the markdown front matter field `publishedAt`
+- Put a post into Recommendations: set `star: true` in the markdown front matter
+- Edit Blogroll links: update `blogroll.json`
 - Post messages use Utterances and are stored in GitHub Issues for `zhy072/zhy072.github.io`
 - Change time-based greetings and Easter eggs: edit `greetingSlots` and `specialGreetings` in `script.js`
 - Change Github / bilibili / email: search for `github.com/yourname`, `space.bilibili.com/yourid`, and `zhy072@ucsd.edu`
@@ -37,3 +40,26 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 - Enable GitHub Issues on the repository
 - Create a `post-comment` label if you want comment issues grouped by label
 - Each post comment thread uses an issue title in the form `post:<post-id>`
+
+## Post Markdown Format
+
+```md
+---
+title: Notice
+excerpt: This site is still being built.
+publishedAt: 2026-05-01
+star: true
+tags: [site, log]
+---
+
+Write the post body here with Markdown.
+```
+
+Use fenced code blocks with a language name for syntax highlighting:
+
+````md
+```python
+def forward(x):
+    return x
+```
+````
