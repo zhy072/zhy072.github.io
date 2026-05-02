@@ -127,13 +127,13 @@
           </div>
         </div>
 
-        <a class="glass-card latest-card" href="detail.html?view=latest" aria-label="Open latest post">
+        <a class="glass-card latest-card" id="latestPostCard" href="detail.html?view=latest" aria-label="Open latest post">
           <p class="muted-title">Latest Post</p>
           <div class="latest-row">
             <div>
-              <h2>Notice</h2>
-              <p>This site is still being built.</p>
-              <time datetime="2026-05-01">2026/5/1</time>
+              <h2 id="latestPostTitle">Notice</h2>
+              <p id="latestPostExcerpt">This site is still being built.</p>
+              <time id="latestPostDate" datetime="2026-05-01">2026/5/1</time>
             </div>
           </div>
         </a>
@@ -163,13 +163,13 @@
           </a>
         </div>
 
-        <a class="glass-card recommend-card" href="detail.html?view=recommend" aria-label="Open random recommendation">
+        <a class="glass-card recommend-card" id="randomPostCard" href="detail.html?view=latest" aria-label="Open random post">
           <p class="muted-title">Random Pick</p>
           <div class="recommend-content">
             <div>
-              <h2>CMU 15-445 & Database</h2>
-              <p>Labs, architecture notes, docs, and gotchas...</p>
-              <p class="stats">Views: 18,367&nbsp;&nbsp; Marks: 320</p>
+              <h2 id="randomPostTitle">CMU 15-445 & Database</h2>
+              <p id="randomPostExcerpt">Labs, architecture notes, docs, and gotchas.</p>
+              <time id="randomPostDate" datetime="2026-04-23">2026/4/23</time>
             </div>
           </div>
         </a>
@@ -184,6 +184,7 @@
       </section>
     </main>
 
+    <script src="content.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
