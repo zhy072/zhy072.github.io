@@ -75,6 +75,8 @@ body::before {
     radial-gradient(ellipse at 78% 58%, rgba(255, 255, 255, 0.22), transparent 46%);
   background-size: 180px 180px, 110% 110%, 120% 120%;
   mix-blend-mode: soft-light;
+  animation: grain-breathe 18s ease-in-out infinite alternate;
+  will-change: opacity, transform;
 }
 
 body::after {
@@ -90,8 +92,9 @@ body::after {
     radial-gradient(ellipse at 82% 84%, rgba(238, 218, 217, 0.36), transparent 42%);
   filter: blur(34px) saturate(118%);
   opacity: 0.82;
-  animation: mist-drift 46s ease-in-out infinite alternate;
+  animation: mist-drift 24s ease-in-out infinite alternate;
   transform: translate3d(0, 0, 0) scale(1.04);
+  will-change: transform, opacity;
 }
 
 a {
@@ -145,8 +148,9 @@ img {
     radial-gradient(ellipse at 80% 66%, rgba(185, 194, 210, 0.28), transparent 42%);
   filter: blur(42px);
   opacity: 0.66;
-  animation: veil-float 64s ease-in-out infinite alternate;
+  animation: veil-float 30s ease-in-out infinite alternate;
   transform: translate3d(0, 0, 0);
+  will-change: transform, opacity;
 }
 
 .dashboard {
@@ -160,27 +164,47 @@ img {
 
 @keyframes mist-drift {
   0% {
-    background-position: 0% 0%, 100% 10%, 42% 100%, 100% 100%;
-    transform: translate3d(-1.8%, -1.2%, 0) scale(1.04);
+    opacity: 0.72;
+    transform: translate3d(-4.5%, -2.6%, 0) scale(1.05) rotate(-1.4deg);
   }
 
-  45% {
-    background-position: 16% 8%, 86% 24%, 50% 86%, 92% 78%;
+  50% {
+    opacity: 0.9;
+    transform: translate3d(2.8%, 1.8%, 0) scale(1.1) rotate(1.2deg);
   }
 
   100% {
-    background-position: 10% 18%, 80% 4%, 34% 82%, 86% 72%;
-    transform: translate3d(2.2%, 1.6%, 0) scale(1.08);
+    opacity: 0.78;
+    transform: translate3d(5.2%, -1.4%, 0) scale(1.08) rotate(0.6deg);
   }
 }
 
 @keyframes veil-float {
   0% {
-    transform: translate3d(1%, -1%, 0) rotate(0.001deg) scale(1);
+    opacity: 0.48;
+    transform: translate3d(2.4%, -2.2%, 0) rotate(-0.8deg) scale(1);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: translate3d(-1.8%, 1.6%, 0) rotate(0.7deg) scale(1.04);
   }
 
   100% {
-    transform: translate3d(-2.2%, 1.8%, 0) rotate(0.001deg) scale(1.06);
+    opacity: 0.58;
+    transform: translate3d(-3.8%, 2.8%, 0) rotate(1.1deg) scale(1.07);
+  }
+}
+
+@keyframes grain-breathe {
+  0% {
+    opacity: 0.38;
+    transform: translate3d(-0.8%, -0.6%, 0) scale(1);
+  }
+
+  100% {
+    opacity: 0.56;
+    transform: translate3d(0.8%, 0.5%, 0) scale(1.015);
   }
 }
 
@@ -230,7 +254,10 @@ img {
   box-shadow: var(--shadow), var(--inner);
   backdrop-filter: blur(38px) saturate(168%) contrast(1.02);
   -webkit-backdrop-filter: blur(38px) saturate(168%) contrast(1.02);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 135ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 120ms ease;
 }
 
 .glass-card::before {
@@ -258,6 +285,7 @@ img {
     radial-gradient(circle at 22% 16%, rgba(255, 255, 255, 0.24), transparent 34%),
     linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 36%, rgba(185, 194, 210, 0.1) 100%);
   opacity: 0.68;
+  transition: opacity 135ms ease;
 }
 
 .glass-card > * {
@@ -278,15 +306,13 @@ img {
 .music-card:hover {
   transform: translate3d(0, -8px, 0) scale(1.018);
   border-color: rgba(255, 255, 255, 0.86);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.66), rgba(255, 255, 255, 0.22)),
-    linear-gradient(320deg, rgba(185, 194, 210, 0.22), rgba(255, 255, 255, 0) 42%, rgba(213, 170, 167, 0.18)),
-    rgba(255, 255, 255, 0.34);
-  box-shadow:
-    0 36px 96px rgba(79, 86, 91, 0.16),
-    0 12px 32px rgba(255, 255, 255, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    inset 0 -26px 48px rgba(255, 255, 255, 0.16);
+}
+
+.glass-card:hover::after,
+.message-button:hover::before,
+.grid-button:hover::before,
+.social-button:hover::before {
+  opacity: 0.96;
 }
 
 .nav-card {
@@ -650,7 +676,10 @@ img {
   box-shadow: 0 16px 34px rgba(74, 111, 105, 0.09), var(--inner);
   backdrop-filter: blur(34px) saturate(158%) contrast(1.02);
   -webkit-backdrop-filter: blur(34px) saturate(158%) contrast(1.02);
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background 220ms ease;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
+  transition: transform 130ms cubic-bezier(0.2, 0.8, 0.2, 1), border-color 120ms ease;
 }
 
 .message-button::before,
@@ -665,6 +694,7 @@ img {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0));
   opacity: 0.74;
   z-index: 0;
+  transition: opacity 130ms ease;
 }
 
 .message-button > *,
