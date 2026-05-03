@@ -1,4 +1,5 @@
 ---
+id: cmu-15445-database
 title: CMU 15-445 & Database
 excerpt: Labs, architecture notes, docs, and gotchas.
 publishedAt: 2026-04-23

@@ -6,7 +6,7 @@ personal webpage
 - Homepage structure and card links: `index.html`
 - Glass effects, background, card sizing, and responsive layout: `styles.css`
 - Project index: `projects/index.json`
-- Markdown posts: `projects/<project-id>/<post-id>.md`
+- Markdown posts: `projects/<project-id>/<post-id>.md` or `projects/<project-id>/<section-id>/<post-id>.md`
 - Blogroll links: `blogroll.json`
 - Live clock, time-based greeting, markdown loading, post sorting, GitHub Issue comments, and detail rendering: `script.js`
 - Shared placeholder destination page: `detail.html`
@@ -25,7 +25,8 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 
 - Change the name: search for `Zhili Yang`
 - Add a project: create `projects/<project-id>/`, then add it to `projects/index.json`
-- Add a post: create `projects/<project-id>/<post-id>.md`, then list the file in that project's `posts`
+- Add a top-level post: create `projects/<project-id>/<post-id>.md`, then list the file in that project's `posts`
+- Add a section folder: create `projects/<project-id>/<section-id>/<post-id>.md`, then list the file in that section's `posts`
 - Change Recent Posts / Latest Post order: edit the markdown front matter field `publishedAt`
 - Calendar marks are generated from each post's `publishedAt` date
 - Calendar holiday colors and labels are configured in `calendarHolidayRanges` in `script.js`, now only for 2026
@@ -34,6 +35,8 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 - Post messages use Utterances and are stored in GitHub Issues for `zhy072/zhy072.github.io`
 - Change time-based greetings and Easter eggs: edit `greetingSlots` and `specialGreetings` in `script.js`
 - Add daily quotes: add objects to the `quotes` array in `script.js` with `id`, `translation`, `original`, and optional `source`
+- Add life gallery photos: place images under `assets/gallery/`, then list them in `assets/gallery/photos.json`
+- Add map locations for gallery photos: give each photo a `location` such as `SanDiego-CA-US`; coordinates live in `galleryLocationMap` in `script.js`, or you can put `lat` and `lng` directly on a photo entry
 - Change Github / bilibili / Zhihu / email: search for `github.com/radicalyyyahaha`, `bilibili.com`, `zhihu.com/people/radicalyyy/posts`, and `zhy072@ucsd.edu`
 - Change destination page copy for static pages: edit `detailMap` in `script.js`
 
@@ -48,6 +51,27 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 
 - Keep `.nojekyll` in the repo root so GitHub Pages serves `projects/**/*.md` as raw static files
 - If live pages show `No posts yet`, check that `https://zhy072.github.io/projects/index.json` and the listed markdown files both return 200
+
+## Project Index Format
+
+Top-level project posts use `posts`. Foldered posts use `sections`:
+
+```json
+{
+  "id": "course-notes",
+  "title": "Course Notes",
+  "posts": ["linux-root-notes.md"],
+  "sections": [
+    {
+      "id": "course-1",
+      "title": "Course 1",
+      "posts": ["cmu-15445-database.md"]
+    }
+  ]
+}
+```
+
+The section example above maps to `projects/course-notes/course-1/cmu-15445-database.md`.
 
 ## Post Markdown Format
 

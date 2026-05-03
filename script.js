@@ -4,6 +4,12 @@ const weekNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const content = { projects: [], blogroll: [] };
 const projectIndexPath = "projects/index.json";
 const blogrollPath = "blogroll.json";
+const galleryPhotosPath = "assets/gallery/photos.json";
+const galleryDiscordUrl = "https://discord.com/";
+const leafletAssets = {
+  css: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+  js: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+};
 const commentsConfig = {
   repo: "zhy072/zhy072.github.io",
   issuePrefix: "post:",
@@ -27,9 +33,9 @@ const greetingSlots = [
   { end: 7, title: "Early Morning", copy: "A quiet start to a new day." },
   { end: 11, title: "Good Morning", copy: "Hope your day starts smoothly." },
   { end: 13, title: "Good Noon", copy: "Remember to take a proper lunch break." },
-  { end: 17, title: "Good Afternoon", copy: "I'm Zhili, Nice to meet you!" },
-  { end: 19, title: "Good Evening", copy: "Thanks for stopping by after a long day." },
-  { end: 22, title: "Good Night", copy: "Welcome in. Stay as long as you like." },
+  { end: 18, title: "Good Afternoon", copy: "I'm Zhili, Nice to meet you!" },
+  { end: 22, title: "Good Evening", copy: "Thanks for stopping by after a long day." },
+  { end: 23, title: "Good Night", copy: "Welcome in. Stay as long as you like." },
   { end: 24, title: "Late Night", copy: "Do not forget to get some rest." },
 ];
 
@@ -88,6 +94,28 @@ const calendarHolidays = calendarHolidayRanges.flatMap((holiday) =>
   expandHolidayRange(holiday.start, holiday.end || holiday.start).map((date) => ({ ...holiday, date }))
 );
 
+const galleryLocationMap = {
+  "SanDiego-CA-US": { label: "San Diego, CA, United States", lat: 32.7157, lng: -117.1611 },
+  "LaJolla-CA-US": { label: "La Jolla, CA, United States", lat: 32.8328, lng: -117.2713 },
+  "LosAngeles-CA-US": { label: "Los Angeles, CA, United States", lat: 34.0522, lng: -118.2437 },
+  "Irvine-CA-US": { label: "Irvine, CA, United States", lat: 33.6846, lng: -117.8265 },
+  "Seattle-WA-US": { label: "Seattle, WA, United States", lat: 47.6062, lng: -122.3321 },
+  "Tokyo-JP": { label: "Tokyo, Japan", lat: 35.6762, lng: 139.6503 },
+  "Shanghai-CN": { label: "Shanghai, China", lat: 31.2304, lng: 121.4737 },
+};
+const galleryRegionAliases = {
+  CA: ["California"],
+  WA: ["Washington"],
+};
+const galleryCountryAliases = {
+  CN: ["China"],
+  JP: ["Japan"],
+  US: ["United States", "USA", "America"],
+};
+
+const galleryFallbackPhotos = [{ src: "assets/image1.jpg", alt: "Life photo", location: "SanDiego-CA-US" }];
+let leafletLoadPromise = null;
+
 const greetingSeed = Math.random();
 
 function expandHolidayRange(startKey, endKey) {
@@ -117,9 +145,28 @@ function getBlogroll() {
   return Array.isArray(content.blogroll) ? content.blogroll : [];
 }
 
+function getProjectSections(project) {
+  return Array.isArray(project.sections) ? project.sections : [];
+}
+
+function getProjectPosts(project) {
+  const directPosts = Array.isArray(project.posts) ? project.posts : [];
+  const sectionPosts = getProjectSections(project).flatMap((section) => {
+    const posts = Array.isArray(section.posts) ? section.posts : [];
+    return posts.map((post) => ({
+      ...post,
+      sectionId: post.sectionId || section.id,
+      sectionTitle: post.sectionTitle || section.title || section.id,
+      sectionSummary: post.sectionSummary || section.summary || "",
+    }));
+  });
+
+  return [...directPosts, ...sectionPosts];
+}
+
 function getAllPosts() {
   return getProjects().flatMap((project) => {
-    const posts = Array.isArray(project.posts) ? project.posts : [];
+    const posts = getProjectPosts(project);
     return posts.map((post) => ({
       ...post,
       projectId: project.id,
@@ -136,12 +183,16 @@ function getPostTimestamp(post) {
   return Number.isNaN(timestamp) ? 0 : timestamp;
 }
 
-function getPostsByDate() {
-  return getAllPosts().sort((left, right) => {
+function sortPostsByDate(posts) {
+  return [...posts].sort((left, right) => {
     const dateOrder = getPostTimestamp(right) - getPostTimestamp(left);
     if (dateOrder !== 0) return dateOrder;
     return String(left.title || "").localeCompare(String(right.title || ""));
   });
+}
+
+function getPostsByDate() {
+  return sortPostsByDate(getAllPosts());
 }
 
 function getPostById(id) {
@@ -192,16 +243,22 @@ function getProjectAnchor(projectId) {
   return `project-${String(projectId || "").replace(/[^A-Za-z0-9_-]/g, "-")}`;
 }
 
+function getProjectSectionAnchor(projectId, sectionId) {
+  return `${getProjectAnchor(projectId)}-section-${String(sectionId || "").replace(/[^A-Za-z0-9_-]/g, "-")}`;
+}
+
 function getPostHref(post, source = {}) {
   const params = new URLSearchParams({ view: "post", id: post.id });
   if (source.from) params.set("from", source.from);
   if (source.projectId) params.set("project", source.projectId);
+  if (source.sectionId) params.set("section", source.sectionId);
   if (source.date) params.set("date", source.date);
   return `detail.html?${params.toString()}`;
 }
 
-function getProjectHref(projectId) {
-  return `detail.html?view=projects#${getProjectAnchor(projectId)}`;
+function getProjectHref(projectId, sectionId) {
+  const anchor = sectionId ? getProjectSectionAnchor(projectId, sectionId) : getProjectAnchor(projectId);
+  return `detail.html?view=projects#${anchor}`;
 }
 
 function getRandomPost(posts) {
@@ -225,6 +282,167 @@ function getQuoteById(id) {
 
 function getRandomQuote() {
   return quotes[Math.floor(Math.random() * quotes.length)] || null;
+}
+
+function shuffleItems(items) {
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  return shuffled;
+}
+
+function normalizeGalleryPhoto(photo) {
+  if (typeof photo === "string") return { src: photo, alt: "Life photo" };
+  return {
+    src: photo?.src || "",
+    alt: photo?.alt || "Life photo",
+    caption: photo?.caption || "",
+    location: photo?.location || "",
+    lat: Number(photo?.lat),
+    lng: Number(photo?.lng),
+  };
+}
+
+async function loadGalleryPhotos() {
+  const loadedPhotos = await fetchJson(galleryPhotosPath, galleryFallbackPhotos);
+  const photos = (Array.isArray(loadedPhotos) ? loadedPhotos : [])
+    .map(normalizeGalleryPhoto)
+    .filter((photo) => photo.src);
+  return photos.length ? photos : galleryFallbackPhotos;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function getGalleryLocation(photo) {
+  const mapped = galleryLocationMap[photo.location];
+  if (mapped) return { key: photo.location, ...mapped };
+
+  if (Number.isFinite(photo.lat) && Number.isFinite(photo.lng)) {
+    return {
+      key: photo.location || `${photo.lat},${photo.lng}`,
+      label: photo.location || "Pinned location",
+      lat: photo.lat,
+      lng: photo.lng,
+    };
+  }
+
+  return null;
+}
+
+function getGalleryLocationGroups(photos) {
+  const groups = new Map();
+
+  photos.forEach((photo) => {
+    const location = getGalleryLocation(photo);
+    if (!location) return;
+
+    if (!groups.has(location.key)) {
+      groups.set(location.key, { ...location, photos: [] });
+    }
+    groups.get(location.key).photos.push(photo);
+  });
+
+  return [...groups.values()].map((group) => ({
+    ...group,
+    representative: shuffleItems(group.photos)[0],
+  }));
+}
+
+function wrapLongitudeNear(longitude, baseLongitude) {
+  let wrappedLongitude = longitude;
+  while (wrappedLongitude - baseLongitude > 180) wrappedLongitude -= 360;
+  while (wrappedLongitude - baseLongitude < -180) wrappedLongitude += 360;
+  return wrappedLongitude;
+}
+
+function getPhotoMapDisplayGroups(groups) {
+  const baseLongitude = groups[0]?.lng ?? 0;
+  return groups.map((group) => ({
+    ...group,
+    mapLng: wrapLongitudeNear(group.lng, baseLongitude),
+  }));
+}
+
+function getPhotoMapPoint(group) {
+  return [group.lat, Number.isFinite(group.mapLng) ? group.mapLng : group.lng];
+}
+
+function getPhotoMapPointNear(group, baseLongitude) {
+  return [group.lat, wrapLongitudeNear(group.lng, baseLongitude)];
+}
+
+function getClosestPhotoMarker(markers, map, key) {
+  const markerCopies = markers.get(key);
+  if (!Array.isArray(markerCopies) || !markerCopies.length) return null;
+
+  const centerLongitude = map.getCenter().lng;
+  return markerCopies.reduce((closest, marker) => {
+    const currentDistance = Math.abs(marker.getLatLng().lng - centerLongitude);
+    const closestDistance = Math.abs(closest.getLatLng().lng - centerLongitude);
+    return currentDistance < closestDistance ? marker : closest;
+  }, markerCopies[0]);
+}
+
+function loadStylesheet(href) {
+  if (document.querySelector(`link[href="${href}"]`)) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    link.addEventListener("load", resolve, { once: true });
+    link.addEventListener("error", reject, { once: true });
+    document.head.appendChild(link);
+  });
+}
+
+function loadScript(src) {
+  if (document.querySelector(`script[src="${src}"]`)) return Promise.resolve();
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.addEventListener("load", resolve, { once: true });
+    script.addEventListener("error", reject, { once: true });
+    document.head.appendChild(script);
+  });
+}
+
+function ensureLeaflet() {
+  if (window.L) return Promise.resolve(window.L);
+  leafletLoadPromise =
+    leafletLoadPromise ||
+    Promise.all([loadStylesheet(leafletAssets.css), loadScript(leafletAssets.js)]).then(() => {
+      if (!window.L) throw new Error("Leaflet did not initialize.");
+      return window.L;
+    });
+  return leafletLoadPromise;
+}
+
+async function geocodeLocation(query) {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return null;
+
+  const params = new URLSearchParams({
+    format: "jsonv2",
+    limit: "1",
+    q: trimmedQuery,
+  });
+  const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`);
+  if (!response.ok) return null;
+
+  const results = await response.json();
+  return Array.isArray(results) ? results[0] || null : null;
 }
 
 function createElement(tag, className, text) {
@@ -291,11 +509,33 @@ function getPostIdFromPath(path) {
   return fileName.replace(/\.md$/i, "");
 }
 
-async function loadPost(project, postFile) {
-  const path = `projects/${project.id}/${postFile}`;
+function getPostPath(project, postFile, section) {
+  const cleanPostFile = String(postFile || "").replace(/^\/+/, "");
+  const parts = ["projects", project.id];
+  if (section?.id) parts.push(section.id);
+  parts.push(cleanPostFile);
+  return parts.filter(Boolean).join("/");
+}
+
+function slugifyPostId(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\.md$/i, "")
+    .replace(/[^A-Za-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getDefaultPostId(project, postFile, section) {
+  const baseId = getPostIdFromPath(postFile);
+  if (!section?.id) return slugifyPostId(baseId);
+  return slugifyPostId(`${project.id}-${section.id}-${baseId}`);
+}
+
+async function loadPost(project, postFile, section) {
+  const path = getPostPath(project, postFile, section);
   const markdown = await fetchText(path);
   const parsed = parseFrontmatter(markdown);
-  const id = parsed.data.id || getPostIdFromPath(postFile);
+  const id = parsed.data.id || getDefaultPostId(project, postFile, section);
 
   return {
     id,
@@ -309,8 +549,20 @@ async function loadPost(project, postFile) {
     projectId: project.id,
     projectTitle: project.title,
     projectSummary: project.summary,
+    sectionId: section?.id || "",
+    sectionTitle: section?.title || section?.id || "",
+    sectionSummary: section?.summary || "",
     starred: isStarred(parsed.data),
   };
+}
+
+async function loadPostOrNull(project, postFile, section) {
+  try {
+    return await loadPost(project, postFile, section);
+  } catch (error) {
+    console.warn(`Unable to load post: ${getPostPath(project, postFile, section)}`, error);
+    return null;
+  }
 }
 
 async function loadContent() {
@@ -320,15 +572,28 @@ async function loadContent() {
   const loadedProjects = await Promise.all(
     projects.map(async (project) => {
       const postFiles = Array.isArray(project.posts) ? project.posts : [];
+      const sectionItems = Array.isArray(project.sections) ? project.sections : [];
       const posts = await Promise.all(
-        postFiles.map((postFile) =>
-          loadPost(project, postFile).catch(() => null)
-        )
+        postFiles.map((postFile) => loadPostOrNull(project, postFile))
+      );
+      const sections = await Promise.all(
+        sectionItems.map(async (section) => {
+          const sectionPostFiles = Array.isArray(section.posts) ? section.posts : [];
+          const sectionPosts = await Promise.all(
+            sectionPostFiles.map((postFile) => loadPostOrNull(project, postFile, section))
+          );
+
+          return {
+            ...section,
+            posts: sectionPosts.filter(Boolean),
+          };
+        })
       );
 
       return {
         ...project,
         posts: posts.filter(Boolean),
+        sections,
       };
     })
   );
@@ -497,12 +762,26 @@ function resetDetail(titleText, options = {}) {
   const title = document.querySelector("#detailTitle");
   const contentTarget = document.querySelector("#detailContent");
   const card = document.querySelector(".detail-card");
+  const shell = document.querySelector(".detail-shell");
   if (!title || !contentTarget) return null;
 
+  closeGalleryLightbox();
   title.textContent = titleText;
   contentTarget.className = "detail-content";
   contentTarget.replaceChildren();
+  card?.classList.remove("gallery-detail-card");
+  card?.classList.remove("gallery-map-card");
+  shell?.classList.remove("gallery-detail-shell");
+  shell?.classList.remove("gallery-map-shell");
   card?.classList.toggle("detail-wide", Boolean(options.wide));
+  if (options.gallery) {
+    card?.classList.add("gallery-detail-card");
+    shell?.classList.add("gallery-detail-shell");
+  }
+  if (options.galleryMap) {
+    card?.classList.add("gallery-map-card");
+    shell?.classList.add("gallery-map-shell");
+  }
   document.title = `${titleText} | Zhili Yang`;
   return contentTarget;
 }
@@ -516,7 +795,8 @@ function createPostListItem(post, source = {}) {
   link.href = getPostHref(post, source);
 
   const eyebrow = createElement("p", "post-eyebrow");
-  eyebrow.textContent = `${post.projectTitle || "Project"} / ${formatDate(post.publishedAt)}`;
+  const locationParts = [post.projectTitle || "Project", post.sectionTitle].filter(Boolean);
+  eyebrow.textContent = `${locationParts.join(" / ")} / ${formatDate(post.publishedAt)}`;
 
   const title = createElement("h2", "", post.title || "Untitled");
   const excerpt = createElement("p", "post-excerpt", post.excerpt || "");
@@ -572,21 +852,45 @@ function renderProjects() {
     if (project.summary) section.appendChild(createElement("p", "project-summary", project.summary));
 
     const posts = Array.isArray(project.posts) ? project.posts : [];
-    const nested = createElement("div", "project-posts");
-    posts
-      .map((post) => ({
-        ...post,
-        projectId: project.id,
-        projectTitle: project.title,
-        starred: isStarred(post),
-      }))
-      .sort((left, right) => getPostTimestamp(right) - getPostTimestamp(left))
-      .forEach((post) =>
+    if (posts.length) {
+      const nested = createElement("div", "project-posts");
+      sortPostsByDate(posts).forEach((post) =>
         nested.appendChild(createPostListItem(post, { from: "projects", projectId: project.id }))
       );
+      section.appendChild(nested);
+    }
 
-    if (!posts.length) nested.appendChild(createElement("p", "empty-copy", "No posts in this project yet."));
-    section.appendChild(nested);
+    const folders = getProjectSections(project);
+    folders.forEach((folder) => {
+      const folderSection = createElement("section", "project-subfolder");
+      folderSection.id = getProjectSectionAnchor(project.id, folder.id);
+
+      const folderHeading = createElement("div", "project-subheading");
+      folderHeading.append(
+        createElement("span", "subfolder-mark", "/"),
+        createElement("h3", "", folder.title || folder.id || "Untitled Folder")
+      );
+      folderSection.appendChild(folderHeading);
+
+      if (folder.summary) folderSection.appendChild(createElement("p", "project-summary", folder.summary));
+
+      const folderPosts = Array.isArray(folder.posts) ? folder.posts : [];
+      const nested = createElement("div", "project-posts");
+      sortPostsByDate(folderPosts).forEach((post) =>
+        nested.appendChild(
+          createPostListItem(post, { from: "projects", projectId: project.id, sectionId: folder.id })
+        )
+      );
+
+      if (!folderPosts.length) nested.appendChild(createElement("p", "empty-copy", "No posts in this folder yet."));
+      folderSection.appendChild(nested);
+      section.appendChild(folderSection);
+    });
+
+    if (!posts.length && !folders.length) {
+      section.appendChild(createElement("p", "empty-copy", "No posts in this project yet."));
+    }
+
     list.appendChild(section);
   });
 
@@ -975,7 +1279,8 @@ function renderPostDetail(post) {
   }
 
   const meta = createElement("p", "post-detail-meta");
-  meta.textContent = `${post.projectTitle || "Project"} / ${formatDate(post.publishedAt)}`;
+  const locationParts = [post.projectTitle || "Project", post.sectionTitle].filter(Boolean);
+  meta.textContent = `${locationParts.join(" / ")} / ${formatDate(post.publishedAt)}`;
   contentTarget.appendChild(meta);
 
   if (post.excerpt) contentTarget.appendChild(createElement("p", "post-detail-excerpt", post.excerpt));
@@ -1097,6 +1402,104 @@ async function renderMessagePage() {
   }
 }
 
+function handleGalleryLightboxKey(event) {
+  if (event.key === "Escape") closeGalleryLightbox();
+}
+
+function closeGalleryLightbox() {
+  document.querySelectorAll(".gallery-lightbox").forEach((lightbox) => lightbox.remove());
+  document.body.classList.remove("gallery-lightbox-open");
+  document.removeEventListener("keydown", handleGalleryLightboxKey);
+}
+
+function openGalleryLightbox(photo) {
+  closeGalleryLightbox();
+
+  const lightbox = createElement("div", "gallery-lightbox");
+  const frame = createElement("figure", "gallery-lightbox-frame");
+  const image = document.createElement("img");
+  const closeButton = createElement("button", "gallery-lightbox-close", "Close");
+
+  lightbox.setAttribute("role", "dialog");
+  lightbox.setAttribute("aria-modal", "true");
+  lightbox.setAttribute("aria-label", photo.alt || "Life photo");
+  image.src = photo.src;
+  image.alt = photo.alt || "";
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close enlarged photo");
+
+  frame.appendChild(image);
+  if (photo.caption) frame.appendChild(createElement("figcaption", "", photo.caption));
+  lightbox.append(frame, closeButton);
+
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) closeGalleryLightbox();
+  });
+  closeButton.addEventListener("click", closeGalleryLightbox);
+  document.addEventListener("keydown", handleGalleryLightboxKey);
+  document.body.classList.add("gallery-lightbox-open");
+  document.body.appendChild(lightbox);
+  closeButton.focus();
+}
+
+function openMapPhotoGroupDialog(group) {
+  closeGalleryLightbox();
+
+  const lightbox = createElement("div", "gallery-lightbox map-group-lightbox");
+  const dialog = createElement("section", "map-group-dialog");
+  const header = createElement("header", "map-group-header");
+  const titleBlock = createElement("div", "map-group-title");
+  const title = createElement("h2", "", group.label);
+  const meta = createElement(
+    "p",
+    "",
+    `${group.photos.length} photo${group.photos.length > 1 ? "s" : ""} / ${group.key}`
+  );
+  const closeButton = createElement("button", "gallery-lightbox-close", "Close");
+  const grid = createElement("div", "map-group-photo-grid");
+
+  lightbox.setAttribute("role", "dialog");
+  lightbox.setAttribute("aria-modal", "true");
+  lightbox.setAttribute("aria-label", `${group.label} photos`);
+  closeButton.type = "button";
+  closeButton.setAttribute("aria-label", "Close photo group");
+
+  titleBlock.append(title, meta);
+  header.append(titleBlock);
+  dialog.append(header, grid);
+
+  group.photos.forEach((photo, index) => {
+    const figure = createElement("figure", "map-group-photo");
+    const image = document.createElement("img");
+    image.src = photo.src;
+    image.alt = photo.alt || `${group.label} photo ${index + 1}`;
+    image.loading = "lazy";
+    image.decoding = "async";
+    figure.tabIndex = 0;
+    figure.setAttribute("role", "button");
+    figure.setAttribute("aria-label", `Enlarge ${photo.alt || `${group.label} photo ${index + 1}`}`);
+    figure.addEventListener("click", () => openGalleryLightbox(photo));
+    figure.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openGalleryLightbox(photo);
+    });
+    figure.appendChild(image);
+    if (photo.caption) figure.appendChild(createElement("figcaption", "", photo.caption));
+    grid.appendChild(figure);
+  });
+
+  lightbox.append(dialog, closeButton);
+  lightbox.addEventListener("click", (event) => {
+    if (event.target === lightbox) closeGalleryLightbox();
+  });
+  closeButton.addEventListener("click", closeGalleryLightbox);
+  document.addEventListener("keydown", handleGalleryLightboxKey);
+  document.body.classList.add("gallery-lightbox-open");
+  document.body.appendChild(lightbox);
+  closeButton.focus();
+}
+
 function renderQuoteDetail(params) {
   const contentTarget = resetDetail("Daily Note");
   if (!contentTarget) return;
@@ -1119,6 +1522,360 @@ function renderQuoteDetail(params) {
   }
 }
 
+async function renderGalleryDetail() {
+  const contentTarget = resetDetail("Welcome to life Frames community", { gallery: true });
+  if (!contentTarget) return;
+
+  contentTarget.className = "detail-content gallery-page";
+
+  const copy = createElement(
+    "p",
+    "gallery-copy",
+    "Snapshots from days, walks, meals, trips, and the small scenes I want to remember."
+  );
+  const actions = createElement("div", "gallery-actions");
+  const mapLink = createElement("a", "gallery-action primary", "Browse map");
+  const discordLink = createElement("a", "gallery-action secondary", "Join blog on Discord");
+  const wall = createElement("div", "gallery-photo-wall");
+
+  mapLink.href = "detail.html?view=gallery-map";
+  discordLink.href = galleryDiscordUrl;
+  discordLink.target = "_blank";
+  discordLink.rel = "noreferrer";
+  wall.id = "lifeGallery";
+  wall.setAttribute("aria-label", "Random life photos");
+
+  actions.append(mapLink, discordLink);
+  contentTarget.append(copy, actions, wall);
+
+  const pool = await loadGalleryPhotos();
+  const selected = shuffleItems(pool).slice(0, Math.min(7, pool.length));
+  const displayPhotos = Array.from({ length: 7 }, (_, index) => selected[index % selected.length]);
+
+  wall.replaceChildren();
+  displayPhotos.forEach((photo, index) => {
+    const figure = createElement("figure", `gallery-photo-card gallery-photo-${(index % 7) + 1}`);
+    const image = document.createElement("img");
+    image.src = photo.src;
+    image.alt = photo.alt || "";
+    image.loading = "lazy";
+    image.decoding = "async";
+    figure.tabIndex = 0;
+    figure.setAttribute("role", "button");
+    figure.setAttribute("aria-label", `Enlarge ${photo.alt || "life photo"}`);
+    figure.addEventListener("click", () => openGalleryLightbox(photo));
+    figure.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      openGalleryLightbox(photo);
+    });
+    figure.appendChild(image);
+    if (photo.caption) figure.appendChild(createElement("figcaption", "", photo.caption));
+    wall.appendChild(figure);
+  });
+}
+
+function getGallerySearchText(group) {
+  const keyParts = String(group.key || "")
+    .split("-")
+    .filter(Boolean);
+  const aliases = keyParts.flatMap((part) => [
+    part,
+    ...(galleryRegionAliases[part] || []),
+    ...(galleryCountryAliases[part] || []),
+  ]);
+
+  return `${group.label || ""} ${group.key || ""} ${aliases.join(" ")}`;
+}
+
+function createMapPlaceCard(group) {
+  const card = createElement("button", "map-place-card");
+  const image = document.createElement("img");
+  const body = createElement("span", "map-place-card-body");
+  const title = createElement("strong", "", group.label);
+  const meta = createElement("span", "", `${group.photos.length} photo${group.photos.length > 1 ? "s" : ""}`);
+  const location = createElement("span", "", group.key);
+
+  card.type = "button";
+  card.dataset.location = group.key;
+  image.src = group.representative.src;
+  image.alt = group.representative.alt || "";
+  image.loading = "lazy";
+  body.append(title, meta, location);
+  card.append(image, body);
+  return card;
+}
+
+function createPhotoMapMarkerHtml(group) {
+  return `
+    <span class="photo-map-marker-shell">
+      <img src="${escapeHtml(group.representative.src)}" alt="" />
+      ${group.photos.length > 1 ? `<span class="photo-map-count">${group.photos.length}</span>` : ""}
+    </span>
+  `;
+}
+
+function renderPhotoMap(groups, mapElement, listElement, onOpenGroup) {
+  const L = window.L;
+  const map = L.map(mapElement, {
+    attributionControl: false,
+    zoomControl: true,
+    minZoom: 3,
+    scrollWheelZoom: true,
+    worldCopyJump: false,
+    maxBounds: [
+      [-85.0511, -540],
+      [85.0511, 540],
+    ],
+    maxBoundsViscosity: 0.65,
+  });
+  const markers = new Map();
+  const groupsByKey = new Map(groups.map((group) => [group.key, group]));
+  const openGroup = typeof onOpenGroup === "function" ? onOpenGroup : () => {};
+  const markerWorldOffsets = [-360, 0, 360];
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors",
+    maxZoom: 19,
+  }).addTo(map);
+
+  groups.forEach((group) => {
+    const icon = L.divIcon({
+      className: "photo-map-marker",
+      html: createPhotoMapMarkerHtml(group),
+      iconSize: [58, 58],
+      iconAnchor: [29, 29],
+      popupAnchor: [0, -30],
+    });
+    const [lat, baseLng] = getPhotoMapPoint(group);
+    const markerCopies = markerWorldOffsets
+      .map((offset) => baseLng + offset)
+      .filter((lng) => lng >= -540 && lng <= 540)
+      .map((lng) => {
+        const marker = L.marker([lat, lng], { icon }).addTo(map);
+
+        marker.bindPopup(`
+          <div class="photo-map-popup">
+            <img src="${escapeHtml(group.representative.src)}" alt="" />
+            <strong>${escapeHtml(group.label)}</strong>
+            <span>${group.photos.length} photo${group.photos.length > 1 ? "s" : ""}</span>
+          </div>
+        `);
+        marker.on("click", () => openGroup(group));
+        return marker;
+      });
+    markers.set(group.key, markerCopies);
+  });
+
+  if (groups.length > 1) {
+    map.fitBounds(
+      groups.map(getPhotoMapPoint),
+      { padding: [56, 56], maxZoom: 7 }
+    );
+  } else if (groups.length === 1) {
+    map.setView(getPhotoMapPoint(groups[0]), 11);
+  } else {
+    map.setView([20, 0], 2);
+  }
+
+  listElement.querySelectorAll(".map-place-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const marker = getClosestPhotoMarker(markers, map, card.dataset.location);
+      const group = groupsByKey.get(card.dataset.location);
+      if (!marker) return;
+      map.flyTo(marker.getLatLng(), Math.max(map.getZoom(), 10), { duration: 0.7 });
+      window.setTimeout(() => {
+        marker.openPopup();
+        if (group) openGroup(group);
+      }, 450);
+    });
+  });
+
+  return { map, markers, searchMarker: null };
+}
+
+async function renderGalleryMapDetail() {
+  const contentTarget = resetDetail("Photos around the world", { galleryMap: true });
+  if (!contentTarget) return;
+
+  contentTarget.className = "detail-content gallery-map-page";
+
+  const toolbar = createElement("div", "map-toolbar");
+  const search = createElement("label", "map-search");
+  const searchInput = document.createElement("input");
+  const mode = createElement("div", "map-mode-tabs");
+  const mapTab = createElement("button", "is-active", "Map");
+  const cardsTab = createElement("button", "", "Cards");
+  const mapShell = createElement("div", "photo-map-shell");
+  const mapElement = createElement("div", "photo-map-canvas");
+  const listElement = createElement("aside", "photo-map-list");
+  const cardsElement = createElement("div", "photo-map-cards");
+  const cardNoResults = createElement("div", "map-no-results-toast", "Find Nothing (｡•́︿•̀｡)");
+
+  searchInput.type = "search";
+  searchInput.placeholder = "Search by location...";
+  search.appendChild(searchInput);
+  mapTab.type = "button";
+  cardsTab.type = "button";
+  mode.append(mapTab, cardsTab);
+  toolbar.append(search, mode);
+  mapShell.append(mapElement, listElement);
+  cardNoResults.setAttribute("role", "status");
+  cardNoResults.setAttribute("aria-live", "polite");
+  contentTarget.append(toolbar, mapShell, cardsElement, cardNoResults);
+
+  const photos = await loadGalleryPhotos();
+  const groups = getPhotoMapDisplayGroups(getGalleryLocationGroups(photos));
+  const groupsByKey = new Map(groups.map((group) => [group.key, group]));
+  let currentMode = "map";
+  let mapController = null;
+
+  if (!groups.length) {
+    listElement.appendChild(createElement("p", "empty-copy", "No mapped photos yet. Add location fields in assets/gallery/photos.json."));
+    mapElement.appendChild(createElement("p", "empty-copy", "Add locations to render the map."));
+    return;
+  }
+
+  groups.forEach((group) => {
+    listElement.appendChild(createMapPlaceCard(group));
+    cardsElement.appendChild(createMapPlaceCard(group));
+  });
+  cardsElement.querySelectorAll(".map-place-card").forEach((card) => {
+    card.addEventListener("click", () => {
+      const group = groupsByKey.get(card.dataset.location);
+      if (group) openMapPhotoGroupDialog(group);
+    });
+  });
+  cardNoResults.hidden = true;
+
+  const setMode = (modeName) => {
+    const showCards = modeName === "cards";
+    currentMode = modeName;
+    mapShell.hidden = showCards;
+    cardsElement.hidden = !showCards;
+    mapTab.classList.toggle("is-active", !showCards);
+    cardsTab.classList.toggle("is-active", showCards);
+    if (showCards) applyCardsFilter();
+    if (!showCards) cardNoResults.hidden = true;
+  };
+
+  const normalizeSearchText = (value) => String(value).toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const getMatches = () => {
+    const query = searchInput.value.trim().toLowerCase();
+    const normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) return groups;
+
+    const queryParts = normalizedQuery.split(/\s+/).filter(Boolean);
+    return groups.filter((group) => {
+      const searchableText = normalizeSearchText(getGallerySearchText(group));
+      return queryParts.every((part) => searchableText.includes(part));
+    });
+  };
+  const applyCardsFilter = () => {
+    const query = searchInput.value.trim();
+    const matches = getMatches();
+    const matchKeys = new Set(matches.map((group) => group.key));
+    let visibleCount = 0;
+
+    cardsElement.querySelectorAll(".map-place-card").forEach((card) => {
+      const isVisible = !query || matchKeys.has(card.dataset.location);
+      card.hidden = !isVisible;
+      if (isVisible) visibleCount += 1;
+    });
+    cardNoResults.hidden = !query || visibleCount > 0;
+  };
+  const focusMapSearch = async () => {
+    if (!mapController) return;
+
+    const matches = getMatches();
+    if (matches.length === 1) {
+      const marker = getClosestPhotoMarker(mapController.markers, mapController.map, matches[0].key);
+      if (!marker) return;
+      mapController.map.flyTo(marker.getLatLng(), Math.max(mapController.map.getZoom(), 10), { duration: 0.7 });
+      window.setTimeout(() => marker.openPopup(), 700);
+      return;
+    }
+
+    if (matches.length > 1) {
+      const centerLongitude = mapController.map.getCenter().lng;
+      mapController.map.fitBounds(
+        matches.map((group) => getPhotoMapPointNear(group, centerLongitude)),
+        { padding: [70, 70], maxZoom: 7 }
+      );
+      return;
+    }
+
+    const query = searchInput.value.trim();
+    const result = await geocodeLocation(query);
+    if (!result || !Number.isFinite(Number(result.lat)) || !Number.isFinite(Number(result.lon))) return;
+
+    if (mapController.searchMarker) {
+      mapController.searchMarker.remove();
+      mapController.searchMarker = null;
+    }
+
+    const lat = Number(result.lat);
+    const rawLng = Number(result.lon);
+    const centerLongitude = mapController.map.getCenter().lng;
+    const lng = wrapLongitudeNear(rawLng, centerLongitude);
+    const [south, north, west, east] = Array.isArray(result.boundingbox)
+      ? result.boundingbox.map(Number)
+      : [NaN, NaN, NaN, NaN];
+    const boundsShift = lng - rawLng;
+
+    if ([south, north, west, east].every(Number.isFinite)) {
+      mapController.map.fitBounds(
+        [
+          [south, west + boundsShift],
+          [north, east + boundsShift],
+        ],
+        { padding: [70, 70], maxZoom: 10 }
+      );
+    } else {
+      mapController.map.flyTo([lat, lng], 8, { duration: 0.7 });
+    }
+
+    mapController.searchMarker = window.L
+      .circleMarker([lat, lng], {
+        radius: 9,
+        color: "#111111",
+        weight: 2,
+        fillColor: "#ffffff",
+        fillOpacity: 0.9,
+      })
+      .addTo(mapController.map)
+      .bindPopup(escapeHtml(result.display_name || query));
+    window.setTimeout(() => mapController.searchMarker?.openPopup(), 500);
+  };
+  const focusCardsMatches = () => {
+    applyCardsFilter();
+    const firstMatch = cardsElement.querySelector(".map-place-card:not([hidden])");
+    firstMatch?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  };
+  setMode("map");
+  mapTab.addEventListener("click", () => setMode("map"));
+  cardsTab.addEventListener("click", () => setMode("cards"));
+  searchInput.addEventListener("input", () => {
+    if (currentMode === "cards") applyCardsFilter();
+  });
+  searchInput.addEventListener("keydown", async (event) => {
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (currentMode === "cards") {
+      focusCardsMatches();
+      return;
+    }
+    await focusMapSearch();
+  });
+
+  try {
+    await ensureLeaflet();
+    mapController = renderPhotoMap(groups, mapElement, listElement, openMapPhotoGroupDialog);
+  } catch {
+    mapElement.replaceChildren(createElement("p", "empty-copy", "Could not load the interactive map library."));
+  }
+}
+
 function renderStaticDetail(view) {
   const [nextTitle, nextCopy] = detailMap[view] || detailMap.home;
   const contentTarget = resetDetail(nextTitle);
@@ -1133,16 +1890,22 @@ function updateBackLink(params, view, post) {
   const from = params.get("from");
   const dateKey = params.get("date");
   const projectId = params.get("project") || post?.projectId;
+  const sectionId = params.get("section") || post?.sectionId;
   const targets = {
     latest: ["detail.html?view=latest", "← Recent Posts"],
     recommend: ["detail.html?view=recommend", "← Recommendations"],
-    projects: [getProjectHref(projectId), "← Projects"],
+    projects: [getProjectHref(projectId, sectionId), "← Projects"],
     calendar: [dateKey ? `detail.html?view=day&date=${encodeURIComponent(dateKey)}` : "index.html", "← Calendar"],
     messages: ["message.html", "← Messages"],
     home: ["index.html", "← Home"],
   };
 
-  const [href, label] = view === "post" && targets[from] ? targets[from] : targets.home;
+  const [href, label] =
+    view === "gallery-map"
+      ? ["detail.html?view=gallery", "← Gallery"]
+      : view === "post" && targets[from]
+        ? targets[from]
+        : targets.home;
   backLink.href = href;
   backLink.textContent = label;
   backLink.setAttribute("aria-label", label.replace("← ", "Back to "));
@@ -1159,6 +1922,16 @@ function renderDetailPage() {
 
   if (view === "quote") {
     renderQuoteDetail(params);
+    return;
+  }
+
+  if (view === "gallery") {
+    renderGalleryDetail();
+    return;
+  }
+
+  if (view === "gallery-map") {
+    renderGalleryMapDetail();
     return;
   }
 
