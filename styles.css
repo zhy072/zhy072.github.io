@@ -841,7 +841,7 @@ img {
 .calendar-title {
   flex: 0 0 auto;
   margin: 0 0 16px;
-  color: #7f928e;
+  color: rgba(83, 104, 101, 0.68);
   font-size: 15px;
   font-weight: 780;
 }
@@ -855,33 +855,134 @@ img {
   gap: 8px 11px;
   align-items: stretch;
   text-align: center;
-  color: #95a4a0;
+  color: rgba(83, 104, 101, 0.58);
   font-size: 16px;
   font-weight: 700;
 }
 
-.calendar-grid span {
+.calendar-grid > span,
+.calendar-grid > a {
+  position: relative;
   min-width: 0;
   min-height: 0;
   height: auto;
   display: grid;
   place-items: center;
   border-radius: 8px;
+  color: inherit;
+  text-decoration: none;
 }
 
 .calendar-grid .weekday {
-  color: #8a9c98;
+  color: rgba(83, 104, 101, 0.62);
   font-weight: 760;
 }
 
-.calendar-grid .today {
+.calendar-grid .calendar-empty {
+  pointer-events: none;
+}
+
+.calendar-day {
+  transition: transform 130ms ease, background 130ms ease, box-shadow 130ms ease;
+}
+
+.calendar-number {
+  position: relative;
+  z-index: 1;
+  min-width: 28px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+}
+
+.calendar-day.is-clickable:hover,
+.calendar-day.is-clickable:focus-visible {
+  transform: translateY(-2px);
+  outline: none;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.12)),
+    rgba(255, 255, 255, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 10px 22px rgba(92, 88, 97, 0.08);
+}
+
+.calendar-day.has-posts {
+  color: rgba(67, 85, 84, 0.76);
+  font-weight: 820;
+}
+
+.calendar-post-dot {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #d5aaa7;
+  box-shadow: 0 0 0 3px rgba(213, 170, 167, 0.14);
+  transform: translateX(-50%);
+}
+
+.calendar-day.day-single .calendar-post-dot {
+  left: calc(50% + 1px);
+  bottom: -4px;
+}
+
+.calendar-day.day-double .calendar-post-dot {
+  left: 50%;
+  bottom: -4px;
+}
+
+.calendar-day.post-level-2 .calendar-post-dot {
+  background: #b9c2d2;
+  box-shadow: 0 0 0 4px rgba(185, 194, 210, 0.16);
+}
+
+.calendar-day.post-level-3 .calendar-post-dot {
+  background: #ead4c1;
+  box-shadow:
+    0 0 0 4px rgba(234, 212, 193, 0.18),
+    0 0 18px rgba(213, 170, 167, 0.18);
+}
+
+.calendar-day.holiday-cn {
+  color: rgba(176, 111, 108, 0.74);
+}
+
+.calendar-day.holiday-us {
+  color: rgba(94, 111, 176, 0.88);
+  text-shadow: 0 0 14px rgba(185, 194, 210, 0.28);
+}
+
+.calendar-day.holiday-us .calendar-number {
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.08)),
+    rgba(185, 194, 210, 0.16);
+}
+
+.calendar-day.holiday-both .calendar-number {
+  background:
+    linear-gradient(135deg, rgba(213, 170, 167, 0.22), rgba(185, 194, 210, 0.24)),
+    rgba(255, 255, 255, 0.18);
+}
+
+.calendar-grid .today:not(.holiday-cn):not(.holiday-us) {
+  color: #536865;
+}
+
+.calendar-grid .today .calendar-number {
   width: 44px;
   height: 26px;
   align-self: center;
   justify-self: center;
-  color: white;
-  background: linear-gradient(180deg, #78d4cd, #4bbab2);
-  box-shadow: 0 8px 18px rgba(70, 184, 176, 0.24);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.2)),
+    linear-gradient(135deg, rgba(213, 170, 167, 0.26), rgba(185, 194, 210, 0.2));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    0 8px 20px rgba(213, 170, 167, 0.14);
 }
 
 .latest-card {
@@ -1168,6 +1269,61 @@ img {
 .section-card:focus-visible {
   border-color: rgba(255, 255, 255, 0.86);
   transform: translateY(-3px);
+}
+
+.holiday-panel {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.holiday-item {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: 22px;
+  padding: 18px 20px;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18)),
+    rgba(255, 255, 255, 0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.84),
+    0 16px 40px rgba(92, 88, 97, 0.06);
+}
+
+.holiday-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #536865;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.holiday-badge.cn {
+  background: rgba(213, 170, 167, 0.22);
+}
+
+.holiday-badge.us {
+  background: rgba(185, 194, 210, 0.26);
+}
+
+.holiday-item h2 {
+  margin: 0;
+  color: #1f2524;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.holiday-item p {
+  max-width: none !important;
+  margin-top: 8px !important;
+  color: #6d807c !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
 }
 
 .post-eyebrow,
@@ -1601,12 +1757,13 @@ img {
   font-weight: 700;
   line-height: 1.7;
   letter-spacing: 0.08em;
+  white-space: pre-line;
 }
 
 .quote-detail-source {
   justify-self: end;
   color: rgba(83, 104, 101, 0.64);
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 780;
 }
 

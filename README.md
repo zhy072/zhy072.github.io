@@ -27,11 +27,14 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 - Add a project: create `projects/<project-id>/`, then add it to `projects/index.json`
 - Add a post: create `projects/<project-id>/<post-id>.md`, then list the file in that project's `posts`
 - Change Recent Posts / Latest Post order: edit the markdown front matter field `publishedAt`
+- Calendar marks are generated from each post's `publishedAt` date
+- Calendar holiday colors and labels are configured in `calendarHolidayRanges` in `script.js`, now only for 2026
 - Put a post into Recommendations: set `star: true` in the markdown front matter
 - Edit Blogroll links: update `blogroll.json`
 - Post messages use Utterances and are stored in GitHub Issues for `zhy072/zhy072.github.io`
 - Change time-based greetings and Easter eggs: edit `greetingSlots` and `specialGreetings` in `script.js`
-- Change Github / bilibili / email: search for `github.com/yourname`, `space.bilibili.com/yourid`, and `zhy072@ucsd.edu`
+- Add daily quotes: add objects to the `quotes` array in `script.js` with `id`, `translation`, `original`, and optional `source`
+- Change Github / bilibili / Zhihu / email: search for `github.com/radicalyyyahaha`, `bilibili.com`, `zhihu.com/people/radicalyyy/posts`, and `zhy072@ucsd.edu`
 - Change destination page copy for static pages: edit `detailMap` in `script.js`
 
 ## GitHub Issue Comments

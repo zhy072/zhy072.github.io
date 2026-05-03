@@ -42,7 +42,68 @@ const specialGreetings = [
   { hour: 23, minute: 59, title: "See You Tomorrow", copy: "Even the last minute counts." },
 ];
 
+const quotes = [
+  {
+    id: "upright-path",
+    translation: "Neither lured by praise nor cowed by slander; walk the path and keep myself upright.",
+    original: "不诱于誉，不恐于诽，率道而行，端然正己。",
+    source: "---from DeepSeek-V4",
+  },
+  {
+    id: "kirakiller",
+    translation: "The careless, up-and-down state of things is a hit right now. When feeling down, that's when moving forward. This up-and-down growth still feels like it's not quite enough. I want to be filled with the taste of standing at the very top of the bottom.",
+    original: 'ぞんざいでアップダウンな現状が今ヒット中 落ち込んでる方が 進めるセオリー Upダウンな成長が いまひとつ 底辺のてっぺんの味で 満たされたいわ\n粗糙又起伏不定的现状, 此刻正大受欢迎。“越是低落，越能前进”——这就是我的理论。作为创作者还欠缺的东西, 就用这差到极点的品味来弥补吧。',
+    source: "---綺羅キラー",
+  },
+  {
+    id: "emotion",
+    translation: "Emotions stem from impulse.",
+    original: "感情源于冲动",
+    source: "",
+  },
+];
+
+const calendarHolidayRanges = [
+  { start: "2026-01-01", end: "2026-01-03", type: "cn", region: "China", name: "New Year's Day / 元旦" },
+  { start: "2026-02-15", end: "2026-02-23", type: "cn", region: "China", name: "Spring Festival / 春节" },
+  { start: "2026-04-04", end: "2026-04-06", type: "cn", region: "China", name: "Qingming Festival / 清明节" },
+  { start: "2026-05-01", end: "2026-05-05", type: "cn", region: "China", name: "Labor Day / 劳动节" },
+  { start: "2026-06-19", end: "2026-06-21", type: "cn", region: "China", name: "Dragon Boat Festival / 端午节" },
+  { start: "2026-09-25", end: "2026-09-27", type: "cn", region: "China", name: "Mid-Autumn Festival / 中秋节" },
+  { start: "2026-10-01", end: "2026-10-07", type: "cn", region: "China", name: "National Day / 国庆节" },
+  { start: "2026-01-01", type: "us", region: "United States", name: "New Year's Day" },
+  { start: "2026-01-19", type: "us", region: "United States", name: "Birthday of Martin Luther King, Jr." },
+  { start: "2026-02-16", type: "us", region: "United States", name: "Washington's Birthday" },
+  { start: "2026-05-25", type: "us", region: "United States", name: "Memorial Day" },
+  { start: "2026-06-19", type: "us", region: "United States", name: "Juneteenth National Independence Day" },
+  { start: "2026-07-03", type: "us", region: "United States", name: "Independence Day" },
+  { start: "2026-09-07", type: "us", region: "United States", name: "Labor Day" },
+  { start: "2026-10-12", type: "us", region: "United States", name: "Columbus Day" },
+  { start: "2026-11-11", type: "us", region: "United States", name: "Veterans Day" },
+  { start: "2026-11-26", type: "us", region: "United States", name: "Thanksgiving Day" },
+  { start: "2026-12-25", type: "us", region: "United States", name: "Christmas Day" },
+];
+
+const calendarHolidays = calendarHolidayRanges.flatMap((holiday) =>
+  expandHolidayRange(holiday.start, holiday.end || holiday.start).map((date) => ({ ...holiday, date }))
+);
+
 const greetingSeed = Math.random();
+
+function expandHolidayRange(startKey, endKey) {
+  const [startYear, startMonth, startDay] = startKey.split("-").map(Number);
+  const [endYear, endMonth, endDay] = endKey.split("-").map(Number);
+  const date = new Date(startYear, startMonth - 1, startDay);
+  const end = new Date(endYear, endMonth - 1, endDay);
+  const dates = [];
+
+  while (date <= end) {
+    dates.push(`${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`);
+    date.setDate(date.getDate() + 1);
+  }
+
+  return dates;
+}
 
 function isStarred(post) {
   return post.star === true || post.starred === true || post.star === "true" || post.starred === "true";
@@ -87,6 +148,26 @@ function getPostById(id) {
   return getAllPosts().find((post) => post.id === id);
 }
 
+function getDateKey(value) {
+  if (!value) return "";
+
+  const dateOnly = String(value).split("T")[0];
+  const match = dateOnly.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (match) return `${match[1]}-${pad(Number(match[2]))}-${pad(Number(match[3]))}`;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+function getPostsByDateKey(dateKey) {
+  return getPostsByDate().filter((post) => getDateKey(post.publishedAt) === dateKey);
+}
+
+function getHolidayEntries(dateKey) {
+  return calendarHolidays.filter((holiday) => holiday.date === dateKey);
+}
+
 function formatDate(value) {
   if (!value) return "Undated";
 
@@ -115,6 +196,7 @@ function getPostHref(post, source = {}) {
   const params = new URLSearchParams({ view: "post", id: post.id });
   if (source.from) params.set("from", source.from);
   if (source.projectId) params.set("project", source.projectId);
+  if (source.date) params.set("date", source.date);
   return `detail.html?${params.toString()}`;
 }
 
@@ -135,6 +217,14 @@ function getRandomPost(posts) {
   } catch {
     return posts[Math.floor(Math.random() * posts.length)];
   }
+}
+
+function getQuoteById(id) {
+  return quotes.find((quote) => quote.id === id) || null;
+}
+
+function getRandomQuote() {
+  return quotes[Math.floor(Math.random() * quotes.length)] || null;
 }
 
 function createElement(tag, className, text) {
@@ -303,6 +393,13 @@ function renderCalendar() {
   const days = new Date(year, month + 1, 0).getDate();
   const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const startOffset = (first.getDay() + 6) % 7;
+  const postsByDate = getAllPosts().reduce((result, post) => {
+    const dateKey = getDateKey(post.publishedAt);
+    if (!dateKey) return result;
+    result[dateKey] = result[dateKey] || [];
+    result[dateKey].push(post);
+    return result;
+  }, {});
 
   title.textContent = `${year}/${month + 1}/${today} ${weekNames[now.getDay()]}`;
   grid.replaceChildren();
@@ -315,13 +412,51 @@ function renderCalendar() {
   });
 
   for (let index = 0; index < startOffset; index += 1) {
-    grid.appendChild(document.createElement("span"));
+    const empty = document.createElement("span");
+    empty.className = "calendar-empty";
+    grid.appendChild(empty);
   }
 
   for (let day = 1; day <= days; day += 1) {
-    const cell = document.createElement("span");
-    cell.textContent = day;
-    if (day === today) cell.className = "today";
+    const dateKey = `${year}-${pad(month + 1)}-${pad(day)}`;
+    const dayPosts = postsByDate[dateKey] || [];
+    const holidays = getHolidayEntries(dateKey);
+    const hasPosts = dayPosts.length > 0;
+    const hasHolidays = holidays.length > 0;
+    const isClickable = hasPosts || hasHolidays;
+    const cell = document.createElement(isClickable ? "a" : "span");
+    const classes = ["calendar-day", day < 10 ? "day-single" : "day-double"];
+    const number = createElement("span", "calendar-number", day);
+
+    if (day === today) classes.push("today");
+    if (isClickable) {
+      classes.push("is-clickable");
+      cell.href = `detail.html?view=day&date=${dateKey}`;
+    }
+    if (hasPosts) {
+      classes.push("has-posts", `post-level-${Math.min(dayPosts.length, 3)}`);
+      cell.dataset.count = String(dayPosts.length);
+    }
+    if (holidays.some((holiday) => holiday.type === "cn")) classes.push("holiday-cn");
+    if (holidays.some((holiday) => holiday.type === "us")) classes.push("holiday-us");
+    if (holidays.some((holiday) => holiday.type === "cn") && holidays.some((holiday) => holiday.type === "us")) {
+      classes.push("holiday-both");
+    }
+
+    const titleParts = [
+      ...holidays.map((holiday) => `${holiday.region}: ${holiday.name}`),
+      ...dayPosts.map((post) => post.title || "Untitled"),
+    ];
+    if (titleParts.length) cell.title = titleParts.join(" / ");
+
+    const ariaParts = [];
+    if (holidays.length) ariaParts.push(holidays.map((holiday) => holiday.name).join(", "));
+    if (dayPosts.length) ariaParts.push(`${dayPosts.length} post${dayPosts.length > 1 ? "s" : ""}`);
+    if (ariaParts.length) cell.setAttribute("aria-label", `${formatDate(dateKey)}: ${ariaParts.join("; ")}`);
+
+    if (hasPosts) number.appendChild(createElement("span", "calendar-post-dot"));
+    cell.className = classes.join(" ");
+    cell.appendChild(number);
     grid.appendChild(cell);
   }
 }
@@ -344,6 +479,18 @@ function renderHomePosts() {
   const posts = getPostsByDate();
   fillHomePostCard("latest", posts[0]);
   fillHomePostCard("random", getRandomPost(posts));
+}
+
+function renderHomeQuote() {
+  const card = document.querySelector(".quote-card");
+  const text = document.querySelector("#quoteText");
+  if (!card || !text) return;
+
+  const quote = getRandomQuote();
+  if (!quote) return;
+
+  text.textContent = quote.translation;
+  card.href = `detail.html?view=quote&id=${encodeURIComponent(quote.id)}`;
 }
 
 function resetDetail(titleText, options = {}) {
@@ -520,6 +667,41 @@ function renderOverview() {
     list.appendChild(link);
   });
 
+  contentTarget.appendChild(list);
+}
+
+function renderDayPosts(dateKey) {
+  const posts = getPostsByDateKey(dateKey);
+  const holidays = getHolidayEntries(dateKey);
+  const title = dateKey ? `Calendar / ${formatDate(dateKey)}` : "Calendar";
+  const contentTarget = resetDetail(title, { wide: true });
+  if (!contentTarget) return;
+
+  if (holidays.length) {
+    const panel = createElement("section", "holiday-panel");
+
+    holidays.forEach((holiday) => {
+      const item = createElement("article", `holiday-item holiday-${holiday.type}`);
+      item.append(
+        createElement("span", `holiday-badge ${holiday.type}`, holiday.region),
+        createElement("h2", "", holiday.name),
+        createElement("p", "", `${holiday.region} holiday on ${formatDate(dateKey)}.`)
+      );
+      panel.appendChild(item);
+    });
+
+    contentTarget.appendChild(panel);
+  }
+
+  if (!posts.length) {
+    contentTarget.appendChild(createElement("p", "empty-copy", "No posts on this date."));
+    return;
+  }
+
+  const list = createElement("div", "post-list");
+  posts.forEach((post) => {
+    list.appendChild(createPostListItem(post, { from: "calendar", date: dateKey }));
+  });
   contentTarget.appendChild(list);
 }
 
@@ -915,16 +1097,26 @@ async function renderMessagePage() {
   }
 }
 
-function renderQuoteDetail() {
+function renderQuoteDetail(params) {
   const contentTarget = resetDetail("Daily Note");
   if (!contentTarget) return;
 
+  const quote = getQuoteById(params.get("id")) || getRandomQuote();
+  if (!quote) {
+    renderEmpty(contentTarget, "No quotes yet.");
+    return;
+  }
+
   contentTarget.className = "quote-detail";
-  contentTarget.innerHTML = `
-    <span class="quote-detail-mark">“</span>
-    <span class="quote-detail-original">不诱于誉，不恐于诽，率道而行，端然正己。</span>
-    <span class="quote-detail-source">---from DeepSeek-V4</span>
-  `;
+  contentTarget.replaceChildren();
+  contentTarget.append(
+    createElement("span", "quote-detail-mark", "“"),
+    createElement("span", "quote-detail-original", quote.original)
+  );
+
+  if (quote.source) {
+    contentTarget.appendChild(createElement("span", "quote-detail-source", quote.source));
+  }
 }
 
 function renderStaticDetail(view) {
@@ -939,11 +1131,13 @@ function updateBackLink(params, view, post) {
   if (!backLink) return;
 
   const from = params.get("from");
+  const dateKey = params.get("date");
   const projectId = params.get("project") || post?.projectId;
   const targets = {
     latest: ["detail.html?view=latest", "← Recent Posts"],
     recommend: ["detail.html?view=recommend", "← Recommendations"],
     projects: [getProjectHref(projectId), "← Projects"],
+    calendar: [dateKey ? `detail.html?view=day&date=${encodeURIComponent(dateKey)}` : "index.html", "← Calendar"],
     messages: ["message.html", "← Messages"],
     home: ["index.html", "← Home"],
   };
@@ -964,7 +1158,7 @@ function renderDetailPage() {
   updateBackLink(params, view);
 
   if (view === "quote") {
-    renderQuoteDetail();
+    renderQuoteDetail(params);
     return;
   }
 
@@ -998,6 +1192,11 @@ function renderDetailPage() {
     return;
   }
 
+  if (view === "day") {
+    renderDayPosts(params.get("date"));
+    return;
+  }
+
   if (view === "post") {
     const post = getPostById(params.get("id"));
     updateBackLink(params, view, post);
@@ -1024,7 +1223,9 @@ async function initSite() {
   initMenuHover();
 
   await loadContent();
+  renderCalendar();
   renderHomePosts();
+  renderHomeQuote();
   renderDetailPage();
   renderMessagePage();
 }
