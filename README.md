@@ -44,6 +44,11 @@ Place same-name images in `assets/`, then update the matching `<img>` tags in `i
 - Create a `post-comment` label if you want comment issues grouped by label
 - Each post comment thread uses an issue title in the form `post:<post-id>`
 
+## GitHub Pages Deployment
+
+- Keep `.nojekyll` in the repo root so GitHub Pages serves `projects/**/*.md` as raw static files
+- If live pages show `No posts yet`, check that `https://zhy072.github.io/projects/index.json` and the listed markdown files both return 200
+
 ## Post Markdown Format
 
 ```md
