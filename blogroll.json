@@ -1,15 +1,15 @@
 [
   {
-    "title": "Maggie Appleton",
-    "url": "https://maggieappleton.com/",
+    "title": "Papers Cool",
+    "url": "https://papers.cool/",
     "category": "Essays",
-    "description": "Visual essays about programming, knowledge tools, and interfaces."
+    "description": "A clean reading space for papers, essays, and research notes."
   },
   {
-    "title": "Julia Evans",
-    "url": "https://jvns.ca/",
+    "title": "CSE 291A/DSC 291: Deep Learning Systems",
+    "url": "https://haoailab.com/cse291-s26/",
     "category": "Systems",
-    "description": "Clear notes about debugging, networking, shells, and how computers work."
+    "description": "Course materials and references for data systems and computing."
   },
   {
     "title": "MIT 6.824",

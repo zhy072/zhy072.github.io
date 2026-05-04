@@ -60,7 +60,7 @@ Top-level project posts use `posts`. Foldered posts use `sections`:
 {
   "id": "course-notes",
   "title": "Course Notes",
-  "posts": ["linux-root-notes.md"],
+  "posts": ["overview.md"],
   "sections": [
     {
       "id": "course-1",
@@ -95,3 +95,29 @@ def forward(x):
     return x
 ```
 ````
+
+Use `$...$` for inline math and `$$...$$` for display math:
+
+```md
+The loss is $L = \|x - \hat{x}\|_2^2$.
+
+$$
+\nabla_\theta L(\theta) = \frac{1}{N}\sum_i \nabla_\theta \ell_i(\theta)
+$$
+```
+
+Use `[label](https://example.com)` for inline links. Put a URL alone on one line to render it as a link card:
+
+```md
+[GitHub](https://github.com/)
+
+https://github.com/hao-ai-lab/FastVideo/pull/1242
+```
+
+Use emphasis markers for bold and italic text:
+
+```md
+**bold**
+*italic*
+***bold italic***
+```

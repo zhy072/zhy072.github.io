@@ -6,6 +6,8 @@ const projectIndexPath = "projects/index.json";
 const blogrollPath = "blogroll.json";
 const galleryPhotosPath = "assets/gallery/photos.json";
 const galleryDiscordUrl = "https://discord.com/";
+const katexCssHref = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css";
+const katexScriptSrc = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js";
 const leafletAssets = {
   css: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   js: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
@@ -16,6 +18,7 @@ const commentsConfig = {
   label: "post-comment",
   theme: "github-light",
 };
+let katexLoadPromise = null;
 
 const detailMap = {
   home: ["Home Navigation", "This is the hub for posts, projects, recommendations, links, and notes."],
@@ -145,6 +148,10 @@ function getBlogroll() {
   return Array.isArray(content.blogroll) ? content.blogroll : [];
 }
 
+function getProjectById(projectId) {
+  return getProjects().find((project) => project.id === projectId) || null;
+}
+
 function getProjectSections(project) {
   return Array.isArray(project.sections) ? project.sections : [];
 }
@@ -259,6 +266,16 @@ function getPostHref(post, source = {}) {
 function getProjectHref(projectId, sectionId) {
   const anchor = sectionId ? getProjectSectionAnchor(projectId, sectionId) : getProjectAnchor(projectId);
   return `detail.html?view=projects#${anchor}`;
+}
+
+function getProjectDetailHref(projectId) {
+  return `detail.html?view=project&project=${encodeURIComponent(projectId || "")}`;
+}
+
+function getProjectSectionDetailHref(projectId, sectionId) {
+  const params = new URLSearchParams({ view: "project", project: projectId || "" });
+  if (sectionId) params.set("section", sectionId);
+  return `detail.html?${params.toString()}`;
 }
 
 function getRandomPost(posts) {
@@ -429,6 +446,17 @@ function ensureLeaflet() {
   return leafletLoadPromise;
 }
 
+function ensureKatex() {
+  if (window.katex?.render) return Promise.resolve(window.katex);
+  katexLoadPromise =
+    katexLoadPromise ||
+    Promise.all([loadStylesheet(katexCssHref), loadScript(katexScriptSrc)]).then(() => {
+      if (!window.katex?.render) throw new Error("KaTeX did not initialize.");
+      return window.katex;
+    });
+  return katexLoadPromise;
+}
+
 async function geocodeLocation(query) {
   const trimmedQuery = query.trim();
   if (!trimmedQuery) return null;
@@ -454,7 +482,7 @@ function createElement(tag, className, text) {
 
 async function fetchJson(path, fallback) {
   try {
-    const response = await fetch(path);
+    const response = await fetch(path, { cache: "no-cache" });
     if (!response.ok) throw new Error(`Unable to load ${path}`);
     return await response.json();
   } catch {
@@ -463,7 +491,7 @@ async function fetchJson(path, fallback) {
 }
 
 async function fetchText(path) {
-  const response = await fetch(path);
+  const response = await fetch(path, { cache: "no-cache" });
   if (!response.ok) throw new Error(`Unable to load ${path}`);
   return response.text();
 }
@@ -771,8 +799,10 @@ function resetDetail(titleText, options = {}) {
   contentTarget.replaceChildren();
   card?.classList.remove("gallery-detail-card");
   card?.classList.remove("gallery-map-card");
+  card?.classList.remove("project-template-card");
   shell?.classList.remove("gallery-detail-shell");
   shell?.classList.remove("gallery-map-shell");
+  shell?.classList.remove("project-template-shell");
   card?.classList.toggle("detail-wide", Boolean(options.wide));
   if (options.gallery) {
     card?.classList.add("gallery-detail-card");
@@ -781,6 +811,10 @@ function resetDetail(titleText, options = {}) {
   if (options.galleryMap) {
     card?.classList.add("gallery-map-card");
     shell?.classList.add("gallery-map-shell");
+  }
+  if (options.projectTemplates) {
+    card?.classList.add("project-template-card");
+    shell?.classList.add("project-template-shell");
   }
   document.title = `${titleText} | Zhili Yang`;
   return contentTarget;
@@ -814,6 +848,257 @@ function createPostListItem(post, source = {}) {
   return link;
 }
 
+function getProjectPrimaryPost(project, section = null) {
+  const posts = section ? section.posts || [] : getProjectPosts(project);
+  return sortPostsByDate(posts)[0] || null;
+}
+
+function getProjectItemHref(project, section = null) {
+  const firstPost = getProjectPrimaryPost(project, section);
+  if (firstPost) {
+    return getPostHref(firstPost, {
+      from: "projects",
+      projectId: project.id,
+      sectionId: section?.id,
+    });
+  }
+
+  return getProjectHref(project.id, section?.id);
+}
+
+function getProjectTemplateItems(projects) {
+  return projects.map((project) => {
+    const posts = getProjectPosts(project);
+    return {
+      id: project.id,
+      title: project.title || "Untitled Project",
+      summary: project.summary || "Project notes and updates.",
+      cover: project.cover || "",
+      href: getProjectDetailHref(project.id),
+      count: posts.length,
+      meta: `${posts.length} ${posts.length === 1 ? "note" : "notes"}`,
+      theme: project.theme || project.id || "project",
+    };
+  });
+}
+
+function getProjectSectionTemplateItems(project) {
+  return getProjectSections(project).map((section) => {
+    const posts = Array.isArray(section.posts) ? section.posts : [];
+    return {
+      id: `${project.id}-${section.id}`,
+      title: section.title || section.id || "Untitled Section",
+      summary: section.summary || project.summary || "Nested project notes.",
+      cover: section.cover || "",
+      href: getProjectSectionDetailHref(project.id, section.id),
+      count: posts.length,
+      meta: `${posts.length} ${posts.length === 1 ? "note" : "notes"}`,
+      theme: section.theme || section.id || project.id || "section",
+    };
+  });
+}
+
+function getAllNoteTemplateItems() {
+  return getPostsByDate().map((post) => ({
+    id: post.id,
+    title: post.title || "Untitled Note",
+    summary: post.excerpt || post.projectSummary || "Open this note to read more.",
+    cover: post.cover || "",
+    href: getPostHref(post, {
+      from: "all-notes",
+      projectId: post.projectId,
+      sectionId: post.sectionId,
+    }),
+    count: 1,
+    meta: [post.projectTitle, post.sectionTitle, formatDate(post.publishedAt)].filter(Boolean).join(" / "),
+    theme: post.projectId || "note",
+  }));
+}
+
+function createProjectPreview(item, index) {
+  const preview = createElement("div", "project-template-preview");
+  const themeIndex = index % 6;
+  preview.dataset.theme = String(themeIndex);
+
+  if (item.cover) {
+    const image = createElement("img");
+    image.src = item.cover;
+    image.alt = "";
+    image.loading = "lazy";
+    preview.appendChild(image);
+    return preview;
+  }
+
+  const previewTitle = createElement("span", "project-preview-title", item.title);
+  const previewMeta = createElement(
+    "span",
+    "project-preview-meta",
+    item.meta || `${item.count || 0} ${item.count === 1 ? "note" : "notes"}`
+  );
+  const previewLine = createElement("span", "project-preview-line");
+  preview.append(previewTitle, previewMeta, previewLine);
+  return preview;
+}
+
+function createProjectTemplateItem(item, index) {
+  const card = createElement("a", "project-template-item");
+  card.href = item.href;
+  card.id = getProjectAnchor(item.id);
+
+  const title = createElement("h2", "", item.title);
+  const summary = createElement("p", "", item.summary);
+  const meta = createElement(
+    "span",
+    "project-template-count",
+    item.meta || `${item.count || 0} ${item.count === 1 ? "note" : "notes"}`
+  );
+
+  card.append(createProjectPreview(item, index), title, summary, meta);
+  return card;
+}
+
+function createProjectNoteItem(post, project, section = null, options = {}) {
+  const source = options.from || "projects";
+  const card = createElement("a", "project-note-item");
+  card.href = getPostHref(post, {
+    from: source,
+    projectId: project.id,
+    sectionId: section?.id,
+  });
+
+  const eyebrowParts =
+    options.eyebrowMode === "date"
+      ? [formatDate(post.publishedAt)]
+      : [section?.title, formatDate(post.publishedAt)].filter(Boolean);
+  const tags = Array.isArray(post.tags) ? post.tags.slice(0, 3) : [];
+  const showEyebrow = options.showEyebrow !== false;
+
+  if (showEyebrow) {
+    card.appendChild(createElement("p", "project-note-eyebrow", eyebrowParts.join(" / ") || "Note"));
+  }
+
+  card.append(
+    createElement("h2", "", post.title || "Untitled Note"),
+    createElement("p", "", post.excerpt || project.summary || "Open this note to read more.")
+  );
+
+  if (showEyebrow && (tags.length || post.starred)) {
+    const tagRow = createElement("div", "project-note-tags");
+    tags.forEach((tag) => tagRow.appendChild(createElement("span", "", tag)));
+    if (post.starred) tagRow.appendChild(createElement("span", "", "Starred"));
+    card.appendChild(tagRow);
+  }
+
+  return card;
+}
+
+function renderProjectNotes(projectId, sectionId = null) {
+  const project = getProjectById(projectId);
+  const section = project && sectionId ? getProjectSections(project).find((item) => item.id === sectionId) : null;
+  const pageTitle = section ? section.title || section.id || "Section" : project?.title || "Project";
+  const contentTarget = resetDetail(pageTitle, { wide: true, projectTemplates: true });
+  if (!contentTarget) return;
+
+  if (!project) {
+    renderEmpty(contentTarget, "Project not found.");
+    return;
+  }
+
+  if (sectionId && !section) {
+    renderEmpty(contentTarget, "Section not found.");
+    return;
+  }
+
+  contentTarget.classList.add("project-notes-page");
+
+  const intro = createElement("div", "project-template-intro project-notes-intro");
+  const copy = createElement("p", "", section?.summary || project.summary || "Notes and build logs in this project.");
+  intro.appendChild(copy);
+  contentTarget.appendChild(intro);
+
+  if (section) {
+    const sectionPosts = Array.isArray(section.posts) ? sortPostsByDate(section.posts) : [];
+    if (!sectionPosts.length) {
+      renderEmpty(contentTarget, "No notes in this section yet.");
+      return;
+    }
+
+    const grid = createElement("div", "project-note-grid");
+    sectionPosts.forEach((post) => grid.appendChild(createProjectNoteItem(post, project, section)));
+    contentTarget.appendChild(grid);
+    return;
+  }
+
+  const directPosts = Array.isArray(project.posts) ? sortPostsByDate(project.posts) : [];
+  const sections = getProjectSections(project);
+  const sectionItems = getProjectSectionTemplateItems(project);
+
+  if (!directPosts.length && !sections.length) {
+    renderEmpty(contentTarget, "No notes in this project yet.");
+    return;
+  }
+
+  if (sectionItems.length) {
+    const sectionGrid = createElement("div", "project-template-grid project-subproject-grid");
+    sectionItems.forEach((item, index) => sectionGrid.appendChild(createProjectTemplateItem(item, index)));
+    contentTarget.appendChild(sectionGrid);
+  }
+
+  if (directPosts.length) {
+    const sectionBlock = createElement("section", "project-note-section");
+    const heading = createElement("div", "project-note-section-heading");
+    heading.append(
+      createElement("h2", "", "Notes"),
+      createElement("p", "", `${directPosts.length} ${directPosts.length === 1 ? "note" : "notes"} in this project.`)
+    );
+    sectionBlock.appendChild(heading);
+
+    const grid = createElement("div", "project-note-grid");
+    directPosts.forEach((post) => grid.appendChild(createProjectNoteItem(post, project)));
+    sectionBlock.appendChild(grid);
+
+    contentTarget.appendChild(sectionBlock);
+  }
+}
+
+function renderAllNotes() {
+  const contentTarget = resetDetail("All notes", { wide: true, projectTemplates: true });
+  if (!contentTarget) return;
+
+  const notes = getPostsByDate();
+  if (!notes.length) {
+    renderEmpty(contentTarget, "No notes yet.");
+    return;
+  }
+
+  const intro = createElement("div", "project-template-intro");
+  const copy = createElement("p", "", "Every note, collected in one place.");
+  intro.appendChild(copy);
+
+  const grid = createElement("div", "project-note-grid all-notes-grid");
+  notes.forEach((post) =>
+    grid.appendChild(
+      createProjectNoteItem(
+        post,
+        {
+          id: post.projectId,
+          title: post.projectTitle,
+          summary: post.projectSummary,
+        },
+        post.sectionId
+          ? {
+              id: post.sectionId,
+              title: post.sectionTitle,
+              summary: post.sectionSummary,
+            }
+          : null,
+        { from: "all-notes", eyebrowMode: "date" }
+      )
+    )
+  );
+  contentTarget.append(intro, grid);
+}
+
 function renderPostList(title, posts, emptyMessage, source = {}) {
   const contentTarget = resetDetail(title, { wide: true });
   if (!contentTarget) return;
@@ -829,7 +1114,7 @@ function renderPostList(title, posts, emptyMessage, source = {}) {
 }
 
 function renderProjects() {
-  const contentTarget = resetDetail("Projects", { wide: true });
+  const contentTarget = resetDetail("Discover projects", { wide: true, projectTemplates: true });
   if (!contentTarget) return;
 
   const projects = getProjects();
@@ -838,63 +1123,18 @@ function renderProjects() {
     return;
   }
 
-  const list = createElement("div", "project-list");
-  projects.forEach((project) => {
-    const section = createElement("section", "project-folder");
-    section.id = getProjectAnchor(project.id);
-    const heading = createElement("div", "project-heading");
-    heading.append(
-      createElement("span", "folder-mark", "/"),
-      createElement("h2", "", project.title || "Untitled Project")
-    );
-    section.appendChild(heading);
+  const intro = createElement("div", "project-template-intro");
+  const copy = createElement("p", "", "Start from a project, note series, or build log.");
+  const viewAll = createElement("a", "project-view-all", "View all");
+  viewAll.href = "detail.html?view=all-notes";
+  intro.append(copy, viewAll);
 
-    if (project.summary) section.appendChild(createElement("p", "project-summary", project.summary));
-
-    const posts = Array.isArray(project.posts) ? project.posts : [];
-    if (posts.length) {
-      const nested = createElement("div", "project-posts");
-      sortPostsByDate(posts).forEach((post) =>
-        nested.appendChild(createPostListItem(post, { from: "projects", projectId: project.id }))
-      );
-      section.appendChild(nested);
-    }
-
-    const folders = getProjectSections(project);
-    folders.forEach((folder) => {
-      const folderSection = createElement("section", "project-subfolder");
-      folderSection.id = getProjectSectionAnchor(project.id, folder.id);
-
-      const folderHeading = createElement("div", "project-subheading");
-      folderHeading.append(
-        createElement("span", "subfolder-mark", "/"),
-        createElement("h3", "", folder.title || folder.id || "Untitled Folder")
-      );
-      folderSection.appendChild(folderHeading);
-
-      if (folder.summary) folderSection.appendChild(createElement("p", "project-summary", folder.summary));
-
-      const folderPosts = Array.isArray(folder.posts) ? folder.posts : [];
-      const nested = createElement("div", "project-posts");
-      sortPostsByDate(folderPosts).forEach((post) =>
-        nested.appendChild(
-          createPostListItem(post, { from: "projects", projectId: project.id, sectionId: folder.id })
-        )
-      );
-
-      if (!folderPosts.length) nested.appendChild(createElement("p", "empty-copy", "No posts in this folder yet."));
-      folderSection.appendChild(nested);
-      section.appendChild(folderSection);
-    });
-
-    if (!posts.length && !folders.length) {
-      section.appendChild(createElement("p", "empty-copy", "No posts in this project yet."));
-    }
-
-    list.appendChild(section);
+  const grid = createElement("div", "project-template-grid");
+  getProjectTemplateItems(projects).forEach((item, index) => {
+    grid.appendChild(createProjectTemplateItem(item, index));
   });
 
-  contentTarget.appendChild(list);
+  contentTarget.append(intro, grid);
   scrollToHashTarget();
 }
 
@@ -1016,10 +1256,11 @@ function renderMarkdown(markdown) {
   let list = null;
   let codeBlock = null;
   let codeLanguage = "";
+  let mathBlock = null;
 
   const flushParagraph = () => {
     if (!paragraph.length) return;
-    body.appendChild(createElement("p", "", paragraph.join(" ").trim()));
+    body.appendChild(createMarkdownTextElement("p", paragraph.join(" ").trim()));
     paragraph = [];
   };
 
@@ -1055,6 +1296,17 @@ function renderMarkdown(markdown) {
     codeLanguage = "";
   };
 
+  const appendMathBlock = (formula) => {
+    const block = createMathElement("div", formula, true);
+    body.appendChild(block);
+  };
+
+  const flushMathBlock = () => {
+    if (!mathBlock) return;
+    appendMathBlock(mathBlock.join("\n").trim());
+    mathBlock = null;
+  };
+
   lines.forEach((line) => {
     if (line.trim().startsWith("```")) {
       if (codeBlock) {
@@ -1074,9 +1326,52 @@ function renderMarkdown(markdown) {
     }
 
     const trimmed = line.trim();
+    if (mathBlock) {
+      if (trimmed === "$$") {
+        flushMathBlock();
+        return;
+      }
+
+      if (trimmed.endsWith("$$")) {
+        mathBlock.push(line.replace(/\s*\$\$\s*$/, ""));
+        flushMathBlock();
+        return;
+      }
+
+      mathBlock.push(line);
+      return;
+    }
+
     if (!trimmed) {
       flushParagraph();
       flushList();
+      return;
+    }
+
+    if (trimmed.startsWith("$$")) {
+      flushParagraph();
+      flushList();
+      const inlineDisplayMath = trimmed.slice(2).trim();
+      if (inlineDisplayMath.endsWith("$$") && inlineDisplayMath.length > 2) {
+        appendMathBlock(inlineDisplayMath.replace(/\$\$\s*$/, "").trim());
+      } else {
+        mathBlock = [];
+        if (inlineDisplayMath) mathBlock.push(inlineDisplayMath);
+      }
+      return;
+    }
+
+    if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+      flushParagraph();
+      flushList();
+      body.appendChild(document.createElement("hr"));
+      return;
+    }
+
+    if (isStandaloneUrl(trimmed)) {
+      flushParagraph();
+      flushList();
+      body.appendChild(createLinkCard(trimmed));
       return;
     }
 
@@ -1085,7 +1380,7 @@ function renderMarkdown(markdown) {
       flushParagraph();
       flushList();
       const level = Math.min(headingMatch[1].length, 4);
-      body.appendChild(createElement(`h${level}`, "", headingMatch[2]));
+      body.appendChild(createMarkdownTextElement(`h${level}`, headingMatch[2]));
       return;
     }
 
@@ -1093,7 +1388,7 @@ function renderMarkdown(markdown) {
     if (listMatch) {
       flushParagraph();
       if (!list) list = document.createElement("ul");
-      list.appendChild(createElement("li", "", listMatch[1]));
+      list.appendChild(createMarkdownTextElement("li", listMatch[1]));
       return;
     }
 
@@ -1103,12 +1398,165 @@ function renderMarkdown(markdown) {
   flushParagraph();
   flushList();
   flushCodeBlock();
+  flushMathBlock();
 
   if (!body.children.length) {
     body.appendChild(createElement("p", "", "No content yet."));
   }
 
   return body;
+}
+
+function createMarkdownTextElement(tag, text) {
+  const element = document.createElement(tag);
+  appendInlineMarkdown(element, text);
+  return element;
+}
+
+function appendInlineMarkdown(element, text) {
+  const source = String(text || "");
+  const inlinePattern =
+    /`([^`\n]+)`|\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|\$([^$\n]+)\$|\*\*\*([^*\n]+)\*\*\*|\*\*([^*\n]+)\*\*|\*([^*\n]+)\*|(https?:\/\/[^\s<)]+)/g;
+  let cursor = 0;
+  let match;
+
+  while ((match = inlinePattern.exec(source)) !== null) {
+    if (match.index > cursor) {
+      element.appendChild(document.createTextNode(source.slice(cursor, match.index)));
+    }
+
+    if (match[1] !== undefined) {
+      element.appendChild(createInlineCodeElement(match[1]));
+    } else if (match[2] !== undefined) {
+      element.appendChild(createInlineLinkElement(match[2], match[3]));
+    } else if (match[4] !== undefined) {
+      element.appendChild(createMathElement("span", match[4], false));
+    } else if (match[5] !== undefined) {
+      element.appendChild(createBoldItalicElement(match[5]));
+    } else if (match[6] !== undefined) {
+      element.appendChild(createInlineMarkdownElement("strong", "markdown-bold", match[6]));
+    } else if (match[7] !== undefined) {
+      element.appendChild(createInlineMarkdownElement("em", "markdown-italic", match[7]));
+    } else {
+      element.appendChild(createInlineLinkElement(match[8], match[8]));
+    }
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor < source.length) {
+    element.appendChild(document.createTextNode(source.slice(cursor)));
+  }
+}
+
+function createInlineMarkdownElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  appendInlineMarkdown(element, text);
+  return element;
+}
+
+function createBoldItalicElement(text) {
+  const strong = document.createElement("strong");
+  const emphasis = document.createElement("em");
+  strong.className = "markdown-bold-italic";
+  emphasis.className = "markdown-bold-italic-text";
+  appendInlineMarkdown(emphasis, text);
+  strong.appendChild(emphasis);
+  return strong;
+}
+
+function isStandaloneUrl(value) {
+  return /^https?:\/\/\S+$/.test(String(value || "").trim());
+}
+
+function getUrlHost(url) {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "";
+  }
+}
+
+function getReadableUrl(url) {
+  try {
+    const parsed = new URL(url);
+    return `${parsed.host}${parsed.pathname}${parsed.search}`;
+  } catch {
+    return url;
+  }
+}
+
+function createInlineLinkElement(label, href) {
+  const link = document.createElement("a");
+  link.className = "markdown-link";
+  link.href = href;
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.textContent = label;
+  return link;
+}
+
+function createLinkCard(url) {
+  const card = document.createElement("a");
+  const title = createElement("strong", "", url);
+  const host = getUrlHost(url);
+  const subtitle = createElement("span", "", getReadableUrl(url));
+
+  card.className = "markdown-link-card";
+  card.href = url;
+  card.target = "_blank";
+  card.rel = "noopener noreferrer";
+  card.setAttribute("aria-label", host ? `Open ${host}` : "Open link");
+  card.append(title, subtitle);
+  return card;
+}
+
+function createMathElement(tag, formula, displayMode) {
+  const element = document.createElement(tag);
+  element.className = displayMode ? "math-display" : "math-inline";
+  element.dataset.formula = String(formula || "");
+  element.textContent = String(formula || "");
+  return element;
+}
+
+function renderMath(container) {
+  const mathNodes = Array.from(container.querySelectorAll(".math-inline, .math-display"));
+  if (!mathNodes.length) return;
+
+  ensureKatex()
+    .then((katex) => {
+      mathNodes.forEach((node) => {
+        const formula = node.dataset.formula || node.textContent || "";
+        const displayMode = node.classList.contains("math-display");
+        katex.render(formula, node, {
+          displayMode,
+          throwOnError: false,
+          strict: "ignore",
+        });
+      });
+    })
+    .catch(() => {
+      mathNodes.forEach((node) => node.classList.add("math-unrendered"));
+    });
+}
+
+function createInlineCodeElement(codeText) {
+  const code = document.createElement("code");
+  const language = normalizeInlineCodeLanguage(codeText);
+  code.className = "inline-code";
+  if (language) code.classList.add(`language-${language}`);
+  code.innerHTML = highlightCode(codeText, language);
+  return code;
+}
+
+function normalizeInlineCodeLanguage(codeText) {
+  const code = String(codeText || "");
+  const inferred = normalizeCodeLanguage("", code);
+  if (inferred) return inferred;
+  if (/\b(?:self|torch|nn|np|pd|plt|math)\b|(?:\w+\.)+\w+\s*\(|\b(?:None|True|False)\b/.test(code)) return "python";
+  if (/\b(?:const|let|var|function|return|this|null|undefined|true|false)\b|=>/.test(code)) return "javascript";
+  if (/^\s*[{[]/.test(code)) return "json";
+  return "";
 }
 
 function normalizeCodeLanguage(language, code) {
@@ -1285,7 +1733,9 @@ function renderPostDetail(post) {
 
   if (post.excerpt) contentTarget.appendChild(createElement("p", "post-detail-excerpt", post.excerpt));
 
-  contentTarget.appendChild(renderMarkdown(post.markdown));
+  const markdownBody = renderMarkdown(post.markdown);
+  contentTarget.appendChild(markdownBody);
+  renderMath(markdownBody);
 
   if (Array.isArray(post.tags) && post.tags.length) {
     const tags = createElement("div", "tag-row");
@@ -1883,6 +2333,54 @@ function renderStaticDetail(view) {
   contentTarget.appendChild(createElement("p", "", nextCopy));
 }
 
+function createSiteDocSection(title, body, items = []) {
+  const section = createElement("section", "site-doc-section");
+  section.append(createElement("h2", "", title), createElement("p", "", body));
+
+  if (items.length) {
+    const list = createElement("ul", "site-doc-list");
+    items.forEach((item) => list.appendChild(createElement("li", "", item)));
+    section.appendChild(list);
+  }
+
+  return section;
+}
+
+function renderAboutSite() {
+  const contentTarget = resetDetail("About This Site", { wide: true });
+  if (!contentTarget) return;
+
+  contentTarget.className = "detail-content site-doc";
+  contentTarget.append(
+    createSiteDocSection(
+      "Purpose",
+      "This site is a personal archive for notes, projects, references, photos, and small daily traces. The homepage is designed as a calm dashboard: quick to scan, visual first, and easy to enter deeper pages only when needed."
+    ),
+    createSiteDocSection(
+      "Content Structure",
+      "The site keeps content as simple local files so it can stay portable on GitHub Pages.",
+      [
+        "Projects and notes are listed in projects/index.json, with note bodies written as Markdown under projects/.",
+        "Gallery metadata lives in assets/gallery/photos.json. The homepage artwork and avatar use assets/image1.jpg and assets/avatar.jpg.",
+        "Blogroll links are managed in blogroll.json.",
+        "Daily notes, calendar highlights, and interface behavior are controlled in script.js.",
+      ]
+    ),
+    createSiteDocSection(
+      "Design System",
+      "The visual language is based on soft gradients, translucent liquid-glass cards, restrained motion, and large readable typography. Most page-level tuning lives in styles.css, while global glass transparency can be adjusted through the CSS variables at the top of that file."
+    ),
+    createSiteDocSection(
+      "Current Features",
+      "The current version includes a project browser, note detail pages, a life gallery with map/card views, calendar holiday markers, a rotating daily quote, social links, and a message entry point."
+    ),
+    createSiteDocSection(
+      "Maintenance Notes",
+      "When adding content, keep large media optimized. Prefer thumbnails and compressed display images for gallery views, and keep original high-resolution photos outside the GitHub repository unless they are truly needed."
+    )
+  );
+}
+
 function updateBackLink(params, view, post) {
   const backLink = document.querySelector(".back-link");
   if (!backLink) return;
@@ -1894,7 +2392,13 @@ function updateBackLink(params, view, post) {
   const targets = {
     latest: ["detail.html?view=latest", "← Recent Posts"],
     recommend: ["detail.html?view=recommend", "← Recommendations"],
-    projects: [getProjectHref(projectId, sectionId), "← Projects"],
+    projects: projectId
+      ? [
+          sectionId ? getProjectSectionDetailHref(projectId, sectionId) : getProjectDetailHref(projectId),
+          sectionId ? "← Section" : "← Project",
+        ]
+      : ["detail.html?view=projects", "← Projects"],
+    "all-notes": ["detail.html?view=all-notes", "← All notes"],
     calendar: [dateKey ? `detail.html?view=day&date=${encodeURIComponent(dateKey)}` : "index.html", "← Calendar"],
     messages: ["message.html", "← Messages"],
     home: ["index.html", "← Home"],
@@ -1903,6 +2407,12 @@ function updateBackLink(params, view, post) {
   const [href, label] =
     view === "gallery-map"
       ? ["detail.html?view=gallery", "← Gallery"]
+      : view === "project"
+        ? sectionId && projectId
+          ? [getProjectDetailHref(projectId), "← Project"]
+          : ["detail.html?view=projects", "← Projects"]
+      : view === "all-notes"
+        ? ["detail.html?view=projects", "← Projects"]
       : view === "post" && targets[from]
         ? targets[from]
         : targets.home;
@@ -1945,6 +2455,16 @@ function renderDetailPage() {
     return;
   }
 
+  if (view === "project") {
+    renderProjectNotes(params.get("project"), params.get("section"));
+    return;
+  }
+
+  if (view === "all-notes") {
+    renderAllNotes();
+    return;
+  }
+
   if (view === "recommend") {
     renderPostList(
       "Recommendations",
@@ -1957,6 +2477,11 @@ function renderDetailPage() {
 
   if (view === "links") {
     renderBlogroll();
+    return;
+  }
+
+  if (view === "site") {
+    renderAboutSite();
     return;
   }
 

@@ -1,5 +1,5 @@
 ---
-title: MultipleHeadAttention
+title: MultiHead Attention
 excerpt: Implement of MHA
 publishedAt: 2026-04-23
 star: true

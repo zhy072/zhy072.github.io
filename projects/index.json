@@ -7,24 +7,42 @@
       "posts": ["MultipleHeadAttention.md", "CrossAttention.md"]
     },
     {
+      "id": "course-notes",
+      "title": "Course Notes",
+      "summary": "Coursework notes, lab writeups, and architecture references.",
+      "sections": [
+        {
+          "id": "CSE240A-Advanced Computer Architechture",
+          "title": "CSE240A-Advanced Computer Architechture",
+          "summary": "UCSD CSE240A",
+          "posts": []
+        },
+        {
+          "id": "ECE250-Random Process",
+          "title": "ECE250-Random Process",
+          "summary": "UCSD ECE250",
+          "posts": []
+        },
+        {
+          "id": "ECE271A-Statistical Learning",
+          "title": "ECE271A-Statistical Learning",
+          "summary": "ECE271A",
+          "posts": []
+        }
+      ]
+    },
+    {
+      "id": "FastVideo",
+      "title": "FastVideo",
+      "summary": "Internship in FastVideo",
+      "posts": ["Lora Training---Data Preprocessing Bugs.md", "Lora Training---Training Logs.md",
+    "Overall.md", "PR Review1.md"]
+    },
+    {
       "id": "site",
       "title": "Site",
       "summary": "Notes about this website, design decisions, and update logs.",
       "posts": ["notice.md", "post-system.md"]
-    },
-    {
-      "id": "course-notes",
-      "title": "Course Notes",
-      "summary": "Coursework notes, lab writeups, and architecture references.",
-      "posts": ["linux-root-notes.md"],
-      "sections": [
-        {
-          "id": "course-1",
-          "title": "Course 1",
-          "summary": "Lecture notes and course writeups.",
-          "posts": ["cmu-15445-database.md"]
-        }
-      ]
     }
   ]
 }
